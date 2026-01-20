@@ -127,13 +127,13 @@ const Themes = [
     { id: "orange-light", name: "برتقالي نهار", class: "theme-orange-light" }
 ];
 
-// الصلوات
+// الصلوات (إزالة القيم الثابتة وتحديثها لحين جلب القيم الحقيقية)
 const Prayers = [
     { name: "الفجر", time: "04:30", index: 0 },
-    { name: "الشروق", time: "05:45", index: 1 },
-    { name: "الظهر", time: "12:15", index: 2 },
-    { name: "العصر", time: "15:45", index: 3 },
-    { name: "المغرب", time: "18:30", index: 4 },
+    { name: "الشروق", time: "05:50", index: 1 },
+    { name: "الظهر", time: "12:00", index: 2 },
+    { name: "العصر", time: "15:15", index: 3 },
+    { name: "المغرب", time: "18:20", index: 4 },
     { name: "العشاء", time: "19:45", index: 5 }
 ];
 
