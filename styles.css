@@ -123,6 +123,8 @@
     --shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
 }
 
+/* ========== الأساسيات ========== */
+
 * {
     box-sizing: border-box;
     -webkit-tap-highlight-color: transparent;
@@ -141,7 +143,8 @@ body {
     transition: var(--transition);
 }
 
-/* شريط التنقل السفلي */
+/* ========== التنقل السفلي ========== */
+
 .bottom-nav {
     position: fixed;
     bottom: 0;
@@ -169,10 +172,13 @@ body {
     cursor: pointer;
     transition: var(--transition);
     padding: 8px 0;
+    flex: 1;
+    min-width: 0;
 }
 
 .nav-item.active {
     color: var(--primary-color);
+    transform: translateY(-2px);
 }
 
 .nav-item i {
@@ -180,7 +186,16 @@ body {
     margin-bottom: 4px;
 }
 
-/* المحتوى الرئيسي */
+.nav-item span {
+    font-size: 0.7rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+/* ========== المحتوى الرئيسي ========== */
+
 .main-content {
     padding: 20px;
     padding-bottom: 90px;
@@ -191,35 +206,23 @@ body {
 
 .header-section {
     text-align: center;
-    padding: 40px 0;
+    padding: 30px 0 20px;
     background: linear-gradient(to bottom, var(--card-bg), transparent);
     border-radius: 0 0 30px 30px;
-    margin-bottom: 25px;
+    margin-bottom: 20px;
     transition: var(--transition);
 }
 
 .header-section h1 {
     font-family: 'Amiri', serif;
-    font-size: 2.5rem;
+    font-size: 2rem;
     color: var(--primary-color);
-    margin: 0;
+    margin: 0 0 10px 0;
     transition: var(--transition);
 }
 
-.ayah-of-day {
-    background: linear-gradient(135deg, var(--card-bg), color-mix(in srgb, var(--card-bg) 80%, #000));
-    border-right: 4px solid var(--accent-color);
-    margin: 15px 0;
-    padding: 15px;
-    border-radius: 12px;
-    font-family: 'Amiri', serif;
-    font-size: 1.2rem;
-    line-height: 1.8;
-    text-align: center;
-    transition: var(--transition);
-}
+/* ========== تصميم البطاقات ========== */
 
-/* تصميم البطاقات */
 .card {
     background: var(--card-bg);
     border-radius: 20px;
@@ -235,7 +238,10 @@ body {
 .card::before {
     content: "";
     position: absolute;
-    top: 0; left: 0; width: 4px; height: 100%;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
     background: var(--primary-color);
     transition: var(--transition);
 }
@@ -251,43 +257,32 @@ body {
     transition: var(--transition);
 }
 
-/* أنظمة الإدخال */
-input[type="checkbox"] {
-    appearance: none;
-    width: 25px;
-    height: 25px;
-    border: 2px solid var(--primary-color);
-    border-radius: 6px;
-    cursor: pointer;
-    position: relative;
+/* ========== آية اليوم ========== */
+
+.ayah-of-day {
+    background: linear-gradient(135deg, var(--card-bg), color-mix(in srgb, var(--card-bg) 80%, #000));
+    border-right: 4px solid var(--accent-color);
+    margin: 15px 0;
+    padding: 15px;
+    border-radius: 12px;
+    font-family: 'Amiri', serif;
+    font-size: 1.2rem;
+    line-height: 1.8;
+    text-align: center;
     transition: var(--transition);
 }
 
-input[type="checkbox"]:checked {
-    background: var(--primary-color);
+.ayah-of-day p:first-child {
+    margin-bottom: 10px;
 }
 
-input[type="checkbox"]:checked::after {
-    content: "\f00c";
-    font-family: "Font Awesome 6 Free";
-    font-weight: 900;
-    color: var(--bg-color);
-    font-size: 14px;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+.ayah-of-day p:last-child {
+    font-style: italic;
+    opacity: 0.9;
 }
 
-.list-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 15px 0;
-    border-bottom: 1px solid var(--soft-white);
-}
+/* ========== مواقيت الصلاة - محسنة ========== */
 
-/* ========== مواقيت الصلاة المحسنة ========== */
 .prayer-times {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -296,66 +291,230 @@ input[type="checkbox"]:checked::after {
 }
 
 .prayer-time {
-    background: rgba(255,255,255,0.05);
-    padding: 12px;
-    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 15px 10px;
+    border-radius: 12px;
     text-align: center;
     transition: var(--transition);
     position: relative;
-    border-left: 3px solid transparent;
+    border-left: 4px solid transparent;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 80px;
 }
 
+/* الصلاة الحالية */
 .prayer-time.current {
-    background: var(--primary-color);
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
     color: #000;
     font-weight: bold;
     transform: scale(1.05);
-    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-}
-
-.prayer-time.sunrise {
-    opacity: 0.8;
-    border-left: 3px solid #f39c12 !important;
-}
-
-.prayer-time.sunrise .name {
-    color: #f39c12;
-}
-
-.prayer-time .name {
-    font-size: 0.9rem;
-    color: var(--text-color);
-    margin-bottom: 5px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+    border-left: 4px solid var(--secondary-color) !important;
 }
 
 .prayer-time.current .name {
     color: #000;
+    font-weight: 800;
+}
+
+.prayer-time.current .time {
+    color: #000;
+    font-weight: 800;
+}
+
+/* وقت الشروق */
+.prayer-time.sunrise {
+    opacity: 0.9;
+    border-left: 4px solid #f39c12 !important;
+    background: linear-gradient(135deg, rgba(243, 156, 18, 0.1), rgba(243, 156, 18, 0.05));
+}
+
+.prayer-time.sunrise .name {
+    color: #f39c12;
+    font-weight: 600;
+}
+
+.prayer-time.sunrise .time {
+    color: #e67e22;
+    font-weight: 600;
+}
+
+/* العناصر داخل مواقيت الصلاة */
+.prayer-time .name {
+    font-size: 0.95rem;
+    color: var(--text-color);
+    margin-bottom: 8px;
+    transition: var(--transition);
 }
 
 .prayer-time .time {
-    font-size: 1.1rem;
-    font-weight: bold;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    transition: var(--transition);
 }
 
+/* مؤشر الصلاة الحالية */
 .current-indicator {
     position: absolute;
-    left: 10px;
-    color: var(--secondary-color);
-    font-size: 1.2rem;
-    background: rgba(46, 204, 113, 0.2);
-    width: 30px;
-    height: 30px;
+    top: 8px;
+    left: 8px;
+    width: 24px;
+    height: 24px;
     border-radius: 50%;
+    background: var(--secondary-color);
     display: flex;
     align-items: center;
     justify-content: center;
+    color: #000;
+    font-size: 0.9rem;
+    font-weight: bold;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    animation: pulse-indicator 2s infinite;
 }
 
-/* ======================================== */
+@keyframes pulse-indicator {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+/* ========== قسم تحديث الموقع - محسن ========== */
+
+.location-update {
+    background: rgba(52, 152, 219, 0.1);
+    padding: 15px;
+    border-radius: 12px;
+    margin-top: 20px;
+    border: 1px solid rgba(52, 152, 219, 0.2);
+    transition: var(--transition);
+}
+
+.location-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px;
+    background: rgba(52, 152, 219, 0.05);
+    border-radius: 8px;
+    margin-bottom: 15px;
+    font-size: 0.85rem;
+    color: var(--accent-color);
+    border-right: 3px solid var(--accent-color);
+}
+
+.location-info i {
+    font-size: 1rem;
+}
+
+.location-update button {
+    background: linear-gradient(135deg, var(--accent-color), #2980b9);
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-family: 'Tajawal';
+    font-weight: 600;
+    font-size: 0.9rem;
+    width: 100%;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 4px 10px rgba(52, 152, 219, 0.2);
+}
+
+.location-update button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(52, 152, 219, 0.3);
+    filter: brightness(1.1);
+}
+
+.location-update button:active {
+    transform: translateY(0);
+}
+
+.location-update button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+.location-help {
+    animation: fadeIn 0.5s ease;
+    border-left: 3px solid #f39c12;
+    margin-top: 15px;
+    padding: 12px;
+    background: rgba(243, 156, 18, 0.1);
+    border-radius: 8px;
+    font-size: 0.8rem;
+    color: #f39c12;
+    line-height: 1.5;
+}
+
+.location-help i {
+    margin-right: 5px;
+}
+
+/* ========== متابعة الصلوات ========== */
+
+.list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--soft-white);
+    transition: var(--transition);
+}
+
+.list-item:last-child {
+    border-bottom: none;
+}
+
+.list-item span {
+    font-weight: 500;
+}
+
+/* تحسينات الشيك بوكس */
+input[type="checkbox"] {
+    appearance: none;
+    width: 26px;
+    height: 26px;
+    border: 2px solid var(--primary-color);
+    border-radius: 6px;
+    cursor: pointer;
+    position: relative;
+    transition: var(--transition);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+input[type="checkbox"]:checked {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+input[type="checkbox"]:checked::after {
+    content: "\f00c";
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+    color: #000;
+    font-size: 14px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* ========== الأذكار ========== */
 
 .dhikr-counter {
     background: color-mix(in srgb, var(--primary-color) 10%, transparent);
-    padding: 12px;
+    padding: 15px;
     border-radius: 12px;
     margin: 10px 0;
     border: 1px solid color-mix(in srgb, var(--primary-color) 30%, transparent);
@@ -369,71 +528,117 @@ input[type="checkbox"]:checked::after {
     margin-bottom: 15px;
     text-align: center;
     color: var(--text-color);
+    padding: 0 10px;
 }
 
 .counter-controls {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 10px;
+    margin-top: 15px;
+    gap: 10px;
 }
 
 .counter-btn {
     background: var(--primary-color);
     color: #000;
     border: none;
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
-    font-size: 1.2rem;
+    font-size: 1.3rem;
     cursor: pointer;
     transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
 }
 
 .counter-btn:hover {
     transform: scale(1.1);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+.counter-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
 }
 
 .counter-display {
     font-size: 1.5rem;
     font-weight: bold;
     color: var(--primary-color);
+    min-width: 60px;
+    text-align: center;
 }
 
 .complete-btn {
     background: var(--secondary-color);
     color: white;
     border: none;
-    padding: 8px 20px;
-    border-radius: 20px;
+    padding: 10px 25px;
+    border-radius: 25px;
     font-family: 'Tajawal', sans-serif;
+    font-weight: 600;
     cursor: pointer;
     transition: var(--transition);
+    flex: 1;
+    max-width: 200px;
 }
 
 .complete-btn:hover {
-    transform: scale(1.05);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(46, 204, 113, 0.3);
 }
 
+.complete-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+/* ========== شريط التقدم ========== */
+
 .progress-bar {
-    height: 8px;
+    height: 10px;
     background: var(--soft-white);
-    border-radius: 4px;
+    border-radius: 5px;
     overflow: hidden;
-    margin: 10px 0;
+    margin: 15px 0;
+    position: relative;
 }
 
 .progress-fill {
     height: 100%;
     background: linear-gradient(90deg, var(--primary-dark), var(--primary-color));
     transition: width 0.5s ease, background 0.5s ease;
+    border-radius: 5px;
+    position: relative;
+    overflow: hidden;
 }
 
-/* أزرار السمة */
+.progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, 
+        transparent, 
+        rgba(255, 255, 255, 0.4), 
+        transparent);
+    animation: shimmer 2s infinite;
+}
+
+/* ========== أزرار السمات ========== */
+
 .theme-selector {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    gap: 10px;
+    gap: 12px;
     margin-top: 15px;
 }
 
@@ -445,6 +650,12 @@ input[type="checkbox"]:checked::after {
     transition: var(--transition);
     position: relative;
     overflow: hidden;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+}
+
+.theme-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
 }
 
 .theme-btn.active {
@@ -466,6 +677,7 @@ input[type="checkbox"]:checked::after {
     align-items: center;
     justify-content: center;
     font-size: 12px;
+    font-weight: bold;
 }
 
 .theme-btn.gold { background: linear-gradient(135deg, #c5a059, #8e6d2d); }
@@ -481,13 +693,17 @@ input[type="checkbox"]:checked::after {
 .theme-btn.orange-light { background: linear-gradient(135deg, #f7c9a1, #e67e22); }
 
 .theme-label {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     text-align: center;
     margin-top: 5px;
     color: var(--text-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-/* زر المتابعة */
+/* ========== الأزرار العامة ========== */
+
 .btn-primary {
     background: linear-gradient(45deg, var(--primary-dark), var(--primary-color));
     border: none;
@@ -499,12 +715,25 @@ input[type="checkbox"]:checked::after {
     cursor: pointer;
     font-family: 'Tajawal', sans-serif;
     transition: var(--transition);
+    margin-bottom: 10px;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
 }
 
 .btn-primary:hover {
-    transform: scale(1.02);
+    transform: translateY(-2px);
     filter: brightness(1.1);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
 }
+
+.btn-primary:active {
+    transform: translateY(0);
+}
+
+/* ========== أزرار التبويب ========== */
 
 .tab-buttons {
     display: flex;
@@ -512,6 +741,16 @@ input[type="checkbox"]:checked::after {
     margin-bottom: 20px;
     overflow-x: auto;
     padding-bottom: 10px;
+    scrollbar-width: thin;
+}
+
+.tab-buttons::-webkit-scrollbar {
+    height: 4px;
+}
+
+.tab-buttons::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 2px;
 }
 
 .tab-btn {
@@ -524,21 +763,40 @@ input[type="checkbox"]:checked::after {
     cursor: pointer;
     white-space: nowrap;
     transition: var(--transition);
+    font-size: 0.9rem;
+    flex-shrink: 0;
+}
+
+.tab-btn:hover {
+    background: color-mix(in srgb, var(--primary-color) 20%, transparent);
 }
 
 .tab-btn.active {
     background: var(--primary-color);
     color: #000;
+    font-weight: 600;
 }
 
-/* تأثيرات التحميل */
+/* ========== تأثيرات الحركة ========== */
+
 .fade-in {
     animation: fadeIn 0.5s ease;
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from { 
+        opacity: 0; 
+        transform: translateY(10px); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0); 
+    }
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
 }
 
 /* زر العودة إلى الأعلى */
@@ -563,11 +821,21 @@ input[type="checkbox"]:checked::after {
     box-shadow: 0 5px 15px rgba(0,0,0,0.3);
 }
 
+.scroll-top:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+}
+
 .scroll-top.visible {
     opacity: 1;
     transform: translateY(0);
 }
 
+.scroll-top.visible:hover {
+    transform: translateY(-5px);
+}
+
+/* تأثير النبض للتذكيرات الذكية */
 @keyframes pulse {
     0% { transform: scale(1); }
     50% { transform: scale(1.02); }
@@ -580,6 +848,7 @@ input[type="checkbox"]:checked::after {
     box-shadow: 0 4px 15px rgba(0,0,0,0.1);
 }
 
+/* تأثير النقر على المسبحة */
 @keyframes tasbeeh-click {
     0% { transform: scale(1); }
     50% { transform: scale(0.95); }
@@ -590,22 +859,8 @@ input[type="checkbox"]:checked::after {
     animation: tasbeeh-click 0.2s ease;
 }
 
-/* تحسينات إضافية */
-.loading-spinner {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 40px;
-}
+/* ========== المسبحة ========== */
 
-.loading-spinner i {
-    font-size: 3rem;
-    color: var(--primary-color);
-    margin-bottom: 20px;
-}
-
-/* تحسينات المسبحة */
 .tasbeeh-container {
     text-align: center;
     padding: 20px;
@@ -632,76 +887,197 @@ input[type="checkbox"]:checked::after {
     transform: scale(0.95);
 }
 
+.tasbeeh-btn:hover {
+    box-shadow: 0 25px 50px rgba(0,0,0,0.4);
+}
+
+/* ========== بطاقات الأذكار ========== */
+
 .dhikr-card {
     transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .dhikr-card:hover {
-    transform: translateY(-2px);
+    transform: translateY(-3px);
     box-shadow: 0 10px 25px rgba(0,0,0,0.2);
 }
 
-/* تحسينات للوضع النهاري */
-body .card {
+/* ========== تحسينات للوضع النهاري ========== */
+
+body .theme-gold-light .card,
+body .theme-blue-light .card,
+body .theme-green-light .card,
+body .theme-purple-light .card,
+body .theme-orange-light .card {
     box-shadow: var(--shadow);
 }
 
-body .bottom-nav {
+body .theme-gold-light .bottom-nav,
+body .theme-blue-light .bottom-nav,
+body .theme-green-light .bottom-nav,
+body .theme-purple-light .bottom-nav,
+body .theme-orange-light .bottom-nav {
     box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
 }
 
-body .ayah-of-day {
+body .theme-gold-light .ayah-of-day,
+body .theme-blue-light .ayah-of-day,
+body .theme-green-light .ayah-of-day,
+body .theme-purple-light .ayah-of-day,
+body .theme-orange-light .ayah-of-day {
     background: linear-gradient(135deg, var(--card-bg), color-mix(in srgb, var(--card-bg) 90%, #fff));
 }
 
-/* تحسين شريط التقدم */
-.progress-bar {
-    position: relative;
-}
+/* ========== تحسينات أخرى ========== */
 
-.progress-bar::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(90deg, 
-        transparent, 
-        rgba(255,255,255,0.2), 
-        transparent);
-    animation: shimmer 2s infinite;
-}
-
-@keyframes shimmer {
-    0% { transform: translateX(-100%); }
-    100% { transform: translateX(100%); }
-}
-
-/* تحسينات التحميل */
-.location-update {
-    background: rgba(52, 152, 219, 0.1);
-    padding: 10px;
-    border-radius: 10px;
-    margin-top: 10px;
+.loading-spinner {
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
     align-items: center;
+    justify-content: center;
+    padding: 40px;
 }
 
-.location-update button {
-    background: var(--accent-color);
-    color: white;
-    border: none;
-    padding: 8px 15px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-family: 'Tajawal';
-    margin-right: 10px;
-    transition: var(--transition);
+.loading-spinner i {
+    font-size: 3rem;
+    color: var(--primary-color);
+    margin-bottom: 20px;
+    animation: spin 1s linear infinite;
 }
 
-.location-update button:hover {
-    filter: brightness(1.1);
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* ========== تخصيص العناصر المحددة ========== */
+
+/* عنوان التذكرة الذكية */
+.card-title i {
+    color: var(--accent-color);
+}
+
+/* تحسينات للعرض على الشاشات الصغيرة */
+@media (max-width: 480px) {
+    .main-content {
+        padding: 15px;
+        padding-bottom: 90px;
+    }
+    
+    .header-section {
+        padding: 20px 0 15px;
+    }
+    
+    .header-section h1 {
+        font-size: 1.8rem;
+    }
+    
+    .prayer-times {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+    
+    .prayer-time {
+        padding: 12px 8px;
+        min-height: 70px;
+    }
+    
+    .prayer-time .name {
+        font-size: 0.85rem;
+    }
+    
+    .prayer-time .time {
+        font-size: 1.1rem;
+    }
+    
+    .theme-selector {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .tab-buttons {
+        flex-wrap: wrap;
+    }
+    
+    .tab-btn {
+        flex: 1;
+        min-width: 120px;
+        text-align: center;
+    }
+    
+    .tasbeeh-btn {
+        width: 150px;
+        height: 150px;
+        font-size: 3rem;
+    }
+}
+
+/* تحسينات للعرض على الشاشات المتوسطة */
+@media (min-width: 768px) {
+    .header-section h1 {
+        font-size: 2.5rem;
+    }
+    
+    .prayer-times {
+        grid-template-columns: repeat(6, 1fr);
+    }
+}
+
+/* ========== تأثيرات Hover إضافية ========== */
+
+.card:hover {
+    box-shadow: 0 15px 35px rgba(0,0,0,0.4);
     transform: translateY(-2px);
 }
+
+.nav-item:hover {
+    color: var(--primary-color);
+    transform: translateY(-2px);
+}
+
+/* تحسينات للوضع النهاري */
+.theme-gold-light .prayer-time.sunrise,
+.theme-blue-light .prayer-time.sunrise,
+.theme-green-light .prayer-time.sunrise,
+.theme-purple-light .prayer-time.sunrise,
+.theme-orange-light .prayer-time.sunrise {
+    background: linear-gradient(135deg, rgba(243, 156, 18, 0.08), rgba(243, 156, 18, 0.03));
+}
+
+.theme-gold-light .prayer-time.current,
+.theme-blue-light .prayer-time.current,
+.theme-green-light .prayer-time.current,
+.theme-purple-light .prayer-time.current,
+.theme-orange-light .prayer-time.current {
+    box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+}
+
+/* ========== شعار وشارات صغيرة ========== */
+
+.badge {
+    display: inline-block;
+    background: var(--secondary-color);
+    color: #000;
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: bold;
+    margin-left: 5px;
+}
+
+.status-indicator {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 5px;
+}
+
+.status-indicator.online {
+    background: var(--secondary-color);
+}
+
+.status-indicator.offline {
+    background: #e74c3c;
+}
+
+/* ========== النهاية ========== */
