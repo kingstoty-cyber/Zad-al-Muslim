@@ -100,45 +100,90 @@ class PrayerTimesCalculator {
         return methods[this.method] || methods['UmmAlQura'];
     }
 
+    // دالة لتحديد الموقع عبر IP (بدون إذن)
+    async getLocationByIP() {
+        try {
+            console.log("جاري تحديد الموقع عبر IP...");
+            const response = await fetch('https://ipapi.co/json/');
+            const data = await response.json();
+            
+            if (data.latitude && data.longitude) {
+                this.latitude = data.latitude;
+                this.longitude = data.longitude;
+                
+                const locationData = {
+                    lat: this.latitude,
+                    lon: this.longitude,
+                    city: data.city,
+                    country: data.country_name,
+                    source: 'ip',
+                    timestamp: Date.now()
+                };
+                localStorage.setItem('user_location', JSON.stringify(locationData));
+                
+                console.log("تم تحديد الموقع عبر IP:", this.latitude, this.longitude, `(${data.city}, ${data.country_name})`);
+                return true;
+            }
+            return false;
+        } catch (error) {
+            console.log("فشل تحديد الموقع عبر IP:", error);
+            return false;
+        }
+    }
+
     async getLocation() {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
             if (!navigator.geolocation) {
-                console.log("Geolocation غير مدعوم");
-                resolve(false);
+                console.log("Geolocation غير مدعوم في هذا المتصفح");
+                // استخدام IP كبديل
+                const ipSuccess = await this.getLocationByIP();
+                resolve(ipSuccess);
                 return;
             }
 
+            // محاولة استخدام GPS أولاً
             navigator.geolocation.getCurrentPosition(
-                (position) => {
+                async (position) => {
                     this.latitude = position.coords.latitude;
                     this.longitude = position.coords.longitude;
                     
                     const locationData = {
                         lat: this.latitude,
                         lon: this.longitude,
+                        source: 'gps',
                         timestamp: Date.now()
                     };
                     localStorage.setItem('user_location', JSON.stringify(locationData));
                     
-                    console.log("الموقع تم تحديده:", this.latitude, this.longitude);
+                    console.log("تم تحديد الموقع عبر GPS:", this.latitude, this.longitude);
                     resolve(true);
                 },
-                (error) => {
-                    console.log("خطأ في تحديد الموقع:", error.message);
+                async (error) => {
+                    console.log("خطأ في GPS:", error.message);
                     
-                    const savedLocation = JSON.parse(localStorage.getItem('user_location') || 'null');
-                    if (savedLocation && (Date.now() - savedLocation.timestamp) < 7 * 24 * 60 * 60 * 1000) {
-                        this.latitude = savedLocation.lat;
-                        this.longitude = savedLocation.lon;
-                        resolve(true);
-                    } else {
-                        resolve(false);
+                    // التحقق من الرسالة الخطأ
+                    let errorMsg = "خطأ غير معروف";
+                    switch(error.code) {
+                        case 1:
+                            errorMsg = "تم رفض إذن الموقع. جاري استخدام IP...";
+                            break;
+                        case 2:
+                            errorMsg = "لا يمكن الوصول إلى معلومات الموقع. جاري استخدام IP...";
+                            break;
+                        case 3:
+                            errorMsg = "انتهت المهلة. جاري استخدام IP...";
+                            break;
                     }
+                    console.log(errorMsg);
+                    
+                    // استخدام IP كبديل
+                    const ipSuccess = await this.getLocationByIP();
+                    resolve(ipSuccess);
                 },
                 { 
                     enableHighAccuracy: true, 
-                    timeout: 10000, 
-                    maximumAge: 60000 
+                    timeout: 8000, 
+                    maximumAge: 0 
                 }
             );
         });
@@ -147,12 +192,33 @@ class PrayerTimesCalculator {
     // دالة لجلب مواقيت الصلاة من API
     async fetchPrayerTimesFromAPI(lat, lng) {
         try {
+            console.log(`جلب المواقيت من API للإحداثيات: ${lat}, ${lng}`);
+            
             const response = await fetch(`https://api.aladhan.com/v1/timings?latitude=${lat}&longitude=${lng}&method=4`);
+            
+            if (!response.ok) {
+                throw new Error(`خطأ في الاستجابة: ${response.status}`);
+            }
+            
             const data = await response.json();
+            console.log("البيانات المستلمة من API:", data.data.timings);
             return data.data.timings;
         } catch (error) {
             console.error('خطأ في جلب مواقيت الصلاة:', error);
-            return null;
+            
+            // محاولة API بديل
+            try {
+                console.log("جرب API بديل...");
+                const altResponse = await fetch(`https://api.aladhan.com/v1/calendar?latitude=${lat}&longitude=${lng}&method=4&month=${new Date().getMonth() + 1}&year=${new Date().getFullYear()}`);
+                const altData = await altResponse.json();
+                const today = new Date().getDate();
+                const todayData = altData.data[today - 1];
+                console.log("البيانات من API البديل:", todayData.timings);
+                return todayData.timings;
+            } catch (altError) {
+                console.error('فشل API البديل أيضاً:', altError);
+                return null;
+            }
         }
     }
 
@@ -200,6 +266,7 @@ class PrayerTimesCalculator {
         const cached = JSON.parse(localStorage.getItem('cached_prayer_times') || 'null');
         
         if (cached && cached.date === today && cached.location) {
+            console.log("استخدام البيانات المخزنة مسبقاً");
             return cached.times;
         }
         
@@ -207,7 +274,9 @@ class PrayerTimesCalculator {
         let times;
         
         if (locationSuccess) {
+            console.log("جاري جلب مواقيت الصلاة...");
             const apiTimings = await this.fetchPrayerTimesFromAPI(this.latitude, this.longitude);
+            
             if (apiTimings) {
                 times = {
                     fajr: apiTimings.Fajr,
@@ -217,17 +286,21 @@ class PrayerTimesCalculator {
                     maghrib: apiTimings.Maghrib,
                     isha: apiTimings.Isha
                 };
+                console.log("تم جلب المواقيت بنجاح من API");
             } else {
+                console.log("استخدام الأوقات المحسوبة محلياً");
                 times = this.computePrayerTimes();
             }
         } else {
+            console.log("فشل تحديد الموقع، استخدام الأوقات المحسوبة محلياً");
             times = this.computePrayerTimes();
         }
         
         const cacheData = {
             date: today,
             location: { lat: this.latitude, lon: this.longitude },
-            times: times
+            times: times,
+            source: locationSuccess ? 'api' : 'local'
         };
         localStorage.setItem('cached_prayer_times', JSON.stringify(cacheData));
         
@@ -241,7 +314,12 @@ const prayerCalculator = new PrayerTimesCalculator();
 // تحديث مواقيت الصلاة
 async function updatePrayerTimes() {
     try {
+        console.log("بدء عملية تحديث مواقيت الصلاة...");
         const times = await prayerCalculator.getPrayerTimes();
+        
+        if (!times) {
+            throw new Error("فشل جلب مواقيت الصلاة");
+        }
         
         // تحديث المصفوفة العالمية
         PrayerTimes = [
@@ -258,8 +336,106 @@ async function updatePrayerTimes() {
         if (AppState.currentTab === 'home') {
             renderHome();
         }
+        
+        return true;
     } catch (error) {
         console.log("استخدام الأوقات الافتراضية:", error);
+        return false;
+    }
+}
+
+// ========== طلب إذن الموقع ==========
+
+async function requestLocationPermission() {
+    return new Promise((resolve, reject) => {
+        if (!navigator.geolocation) {
+            console.log("Geolocation غير مدعوم");
+            resolve(false);
+            return;
+        }
+        
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                console.log("تم منح إذن الموقع:", position.coords);
+                resolve(true);
+            },
+            (error) => {
+                console.log("تم رفض إذن الموقع:", error.message);
+                resolve(false);
+            },
+            { enableHighAccuracy: false, timeout: 5000 }
+        );
+    });
+}
+
+// دالة مع ردود فعل للتحديث
+async function updatePrayerTimesWithFeedback() {
+    const content = document.getElementById('page-content');
+    const prayerCard = content.querySelector('.card:nth-child(2)');
+    const updateBtn = prayerCard.querySelector('button');
+    const locationInfo = prayerCard.querySelector('.location-info');
+    
+    const originalText = updateBtn.innerHTML;
+    updateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...';
+    updateBtn.disabled = true;
+    
+    try {
+        console.log("بدء تحديث المواقيت...");
+        const success = await updatePrayerTimes();
+        
+        if (success) {
+            updateBtn.innerHTML = '<i class="fas fa-check"></i> تم التحديث';
+            
+            // تحديث معلومات الموقع
+            const savedLocation = JSON.parse(localStorage.getItem('user_location') || 'null');
+            if (savedLocation) {
+                const locationText = savedLocation.city && savedLocation.country 
+                    ? `${savedLocation.city}, ${savedLocation.country}`
+                    : `الإحداثيات: ${savedLocation.lat.toFixed(4)}, ${savedLocation.lon.toFixed(4)}`;
+                
+                if (locationInfo) {
+                    locationInfo.innerHTML = `<i class="fas fa-map-marker-alt"></i> ${locationText} (${savedLocation.source === 'gps' ? 'GPS' : 'IP'})`;
+                }
+            }
+            
+            setTimeout(() => {
+                updateBtn.innerHTML = originalText;
+                updateBtn.disabled = false;
+            }, 2000);
+        } else {
+            throw new Error("فشل التحديث");
+        }
+    } catch (error) {
+        console.error("فشل تحديث المواقيت:", error);
+        updateBtn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> فشل التحديث';
+        
+        // عرض رسالة مساعدة
+        const helpDiv = document.createElement('div');
+        helpDiv.className = 'location-help';
+        helpDiv.style.cssText = `
+            font-size: 0.8rem;
+            color: #f39c12;
+            margin-top: 10px;
+            padding: 8px;
+            background: rgba(243, 156, 18, 0.1);
+            border-radius: 6px;
+        `;
+        helpDiv.innerHTML = `
+            <i class="fas fa-lightbulb"></i> 
+            يمكنك تجربة:<br>
+            1. تأكد من اتصال الإنترنت<br>
+            2. جرب تحديث الموقع مرة أخرى<br>
+            3. استخدم VPN إذا كنت في بلد يحجب API
+        `;
+        
+        if (!prayerCard.querySelector('.location-help')) {
+            prayerCard.appendChild(helpDiv);
+        }
+        
+        setTimeout(() => {
+            updateBtn.innerHTML = originalText;
+            updateBtn.disabled = false;
+        }, 3000);
     }
 }
 
@@ -286,7 +462,9 @@ function applyTheme(themeId = AppState.currentTheme) {
     // تحديث العرض
     const themeNameDisplay = document.getElementById('current-theme');
     if (themeNameDisplay) {
-        themeNameDisplay.textContent = `السمة: ${selectedTheme ? selectedTheme.name : "ذهبي ليلي"}`;
+        const themeName = selectedTheme ? selectedTheme.name : "ذهبي ليلي";
+        themeNameDisplay.textContent = `السمة: ${themeName}`;
+        themeNameDisplay.style.cssText = "font-size: 0.9rem; color: var(--primary-color); margin-top: 5px;";
     }
 }
 
@@ -367,6 +545,16 @@ function renderHome() {
     const reminder = getRandomReminder();
     const currentPrayer = getCurrentPrayer();
     
+    // جلب معلومات الموقع المخزنة
+    const savedLocation = JSON.parse(localStorage.getItem('user_location') || 'null');
+    const locationText = savedLocation ? 
+        (savedLocation.city && savedLocation.country 
+            ? `${savedLocation.city}, ${savedLocation.country}`
+            : `الإحداثيات: ${savedLocation.lat?.toFixed(4) || '24.7136'}, ${savedLocation.lon?.toFixed(4) || '46.6753'}`)
+        : "الرياض, السعودية";
+    
+    const locationSource = savedLocation?.source === 'gps' ? 'GPS' : 'IP';
+
     content.innerHTML = `
         <div class="card smart-reminder">
             <div class="card-title"><i class="fas fa-lightbulb"></i> تذكيرات ذكية</div>
@@ -392,10 +580,18 @@ function renderHome() {
                 }).join('')}
             </div>
             <div class="location-update">
-                <i class="fas fa-info-circle"></i> الصلاة الحالية: ${currentPrayer}
+                <div style="margin-bottom: 8px;">
+                    <i class="fas fa-info-circle"></i> الصلاة الحالية: <strong>${currentPrayer}</strong>
+                </div>
+                <div class="location-info" style="font-size: 0.85rem; color: var(--accent-color); margin-bottom: 10px;">
+                    <i class="fas fa-map-marker-alt"></i> ${locationText} (${locationSource})
+                </div>
                 <button onclick="updatePrayerTimesWithFeedback()">
                     <i class="fas fa-sync-alt"></i> تحديث الموقع
                 </button>
+                <div style="font-size: 0.75rem; color: #7f8c8d; margin-top: 10px; text-align: center;">
+                    <i class="fas fa-info-circle"></i> سيتم استخدام IP لتحديد الموقع إذا لم ينجح GPS
+                </div>
             </div>
         </div>
         
@@ -425,33 +621,6 @@ function renderHome() {
             <p style="margin: 10px 0 0 0; color: var(--primary-color); font-size: 0.9rem;">${ayah.reference}</p>
         </div>
     `;
-}
-
-function updatePrayerTimesWithFeedback() {
-    const content = document.getElementById('page-content');
-    const prayerCard = content.querySelector('.card:nth-child(2)');
-    const updateBtn = prayerCard.querySelector('button');
-    
-    const originalText = updateBtn.innerHTML;
-    updateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...';
-    updateBtn.disabled = true;
-    
-    setTimeout(async () => {
-        try {
-            await updatePrayerTimes();
-            updateBtn.innerHTML = '<i class="fas fa-check"></i> تم التحديث';
-            setTimeout(() => {
-                updateBtn.innerHTML = originalText;
-                updateBtn.disabled = false;
-            }, 2000);
-        } catch (error) {
-            updateBtn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> فشل التحديث';
-            setTimeout(() => {
-                updateBtn.innerHTML = originalText;
-                updateBtn.disabled = false;
-            }, 2000);
-        }
-    }, 1000);
 }
 
 function togglePrayer(index) {
@@ -1092,10 +1261,11 @@ function renderSettings() {
 
         <div class="card">
             <div class="card-title"><i class="fas fa-circle-info"></i> حول التطبيق</div>
-            <p>تطبيق <span style="color: var(--primary-color)">زاد المسلم</span> - الإصدار 3.0</p>
+            <p>تطبيق <span style="color: var(--primary-color)">زاد المسلم</span> - الإصدار 3.1</p>
             <p style="font-size: 0.9rem; line-height: 1.6;">
                 تطبيق متكامل لمتابعة العبادات اليومية، الأذكار، وختم القرآن الكريم.<br>
-                يعمل بدون إنترنت ويحفظ جميع بياناتك محلياً على جهازك.
+                يعمل بدون إنترنت ويحفظ جميع بياناتك محلياً على جهازك.<br>
+                <strong>خاصية الموقع:</strong> يستخدم GPS أو IP لتحديد الموقع تلقائياً.
             </p>
             <div style="display: flex; gap: 15px; margin-top: 15px; justify-content: center;">
                 <div style="text-align: center;">
@@ -1107,8 +1277,8 @@ function renderSettings() {
                     <div style="font-size: 0.7rem;">يعمل بدون نت</div>
                 </div>
                 <div style="text-align: center;">
-                    <i class="fas fa-heart" style="color: #e74c3c; font-size: 1.5rem;"></i>
-                    <div style="font-size: 0.7rem;">بالحب نصنعه</div>
+                    <i class="fas fa-map-marker-alt" style="color: #3498db; font-size: 1.5rem;"></i>
+                    <div style="font-size: 0.7rem;">تحديد تلقائي</div>
                 </div>
             </div>
         </div>
@@ -1193,10 +1363,13 @@ window.onload = async () => {
     document.getElementById('current-date').textContent = getArabicDate();
     document.getElementById('current-theme').style.cssText = "font-size: 0.9rem; color: var(--primary-color); margin-top: 5px;";
     
-    // 4. تحميل مواقيت الصلاة
+    // 4. تحميل مواقيت الصلاة عند التحميل
+    console.log("بدء تحميل التطبيق...");
     setTimeout(async () => {
+        console.log("جاري تحديث مواقيت الصلاة...");
         await updatePrayerTimes();
-    }, 1000);
+        console.log("اكتمل تحميل التطبيق");
+    }, 1500);
     
     // 5. تحميل الصفحة الرئيسية
     renderHome();
@@ -1208,6 +1381,7 @@ window.onload = async () => {
     
     // 7. تحديث مواقيت الصلاة كل 6 ساعات
     setInterval(async () => {
+        console.log("تحديث دوري لمواقيت الصلاة...");
         await updatePrayerTimes();
     }, 6 * 3600000);
     
