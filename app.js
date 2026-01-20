@@ -30,7 +30,11 @@ function getCurrentPrayer() {
     const now = new Date();
     const currentTime = now.getHours() * 60 + now.getMinutes();
     
-    const prayerTimesInMinutes = PrayerTimes.map(prayer => {
+    // إنشاء مصفوفة للصلوات فقط (باستثناء الشروق)
+    const prayersOnly = PrayerTimes.filter(prayer => prayer.name !== "الشروق");
+    
+    // تحويل الأوقات إلى دقائق
+    const prayerTimesInMinutes = prayersOnly.map(prayer => {
         const [hours, minutes] = prayer.time.split(':').map(Number);
         return {
             name: prayer.name,
@@ -38,14 +42,41 @@ function getCurrentPrayer() {
         };
     });
     
-    for (let i = 0; i < prayerTimesInMinutes.length - 1; i++) {
-        if (currentTime >= prayerTimesInMinutes[i].minutes && 
-            currentTime < prayerTimesInMinutes[i + 1].minutes) {
-            return prayerTimesInMinutes[i].name;
+    // البحث عن الوقت الحالي بالنسبة لأوقات الصلاة
+    let currentPrayerIndex = -1;
+    
+    for (let i = 0; i < prayerTimesInMinutes.length; i++) {
+        if (currentTime >= prayerTimesInMinutes[i].minutes) {
+            currentPrayerIndex = i;
         }
     }
     
-    return "الفجر";
+    // إذا كان الوقت الحالي قبل أول صلاة (الفجر)
+    if (currentPrayerIndex === -1) {
+        // إذا كان الوقت بعد منتصف الليل وقبل الفجر، فالصلاة الحالية هي العشاء
+        if (currentTime < prayerTimesInMinutes[0].minutes) {
+            return "العشاء";
+        }
+    }
+    
+    // إذا كان الوقت الحالي بعد آخر صلاة (العشاء)
+    if (currentPrayerIndex === prayerTimesInMinutes.length - 1) {
+        // التحقق إذا تجاوز وقت العشاء
+        if (currentTime >= prayerTimesInMinutes[prayerTimesInMinutes.length - 1].minutes) {
+            return "العشاء";
+        }
+    }
+    
+    // إذا كان الوقت بعد صلاة وقبل الصلاة التالية
+    if (currentPrayerIndex >= 0 && currentPrayerIndex < prayerTimesInMinutes.length - 1) {
+        // إذا تجاوزنا وقت الصلاة الحالية ولم نصل للصلاة التالية
+        if (currentTime < prayerTimesInMinutes[currentPrayerIndex + 1].minutes) {
+            return prayerTimesInMinutes[currentPrayerIndex].name;
+        }
+    }
+    
+    // في حالة عدم العثور، نعود إلى أول صلاة
+    return prayersOnly.length > 0 ? prayersOnly[0].name : "الفجر";
 }
 
 // ========== نظام مواقيت الصلاة الجغرافي ==========
@@ -113,7 +144,19 @@ class PrayerTimesCalculator {
         });
     }
 
-    // حساب مبسط لمواقيت الصلاة
+    // دالة لجلب مواقيت الصلاة من API
+    async fetchPrayerTimesFromAPI(lat, lng) {
+        try {
+            const response = await fetch(`https://api.aladhan.com/v1/timings?latitude=${lat}&longitude=${lng}&method=4`);
+            const data = await response.json();
+            return data.data.timings;
+        } catch (error) {
+            console.error('خطأ في جلب مواقيت الصلاة:', error);
+            return null;
+        }
+    }
+
+    // حساب مبسط لمواقيت الصلاة (يستخدم عندما تفشل API)
     computePrayerTimes(date = new Date()) {
         const month = date.getMonth() + 1;
         const day = date.getDate();
@@ -160,8 +203,26 @@ class PrayerTimesCalculator {
             return cached.times;
         }
         
-        await this.getLocation();
-        const times = this.computePrayerTimes();
+        const locationSuccess = await this.getLocation();
+        let times;
+        
+        if (locationSuccess) {
+            const apiTimings = await this.fetchPrayerTimesFromAPI(this.latitude, this.longitude);
+            if (apiTimings) {
+                times = {
+                    fajr: apiTimings.Fajr,
+                    sunrise: apiTimings.Sunrise,
+                    dhuhr: apiTimings.Dhuhr,
+                    asr: apiTimings.Asr,
+                    maghrib: apiTimings.Maghrib,
+                    isha: apiTimings.Isha
+                };
+            } else {
+                times = this.computePrayerTimes();
+            }
+        } else {
+            times = this.computePrayerTimes();
+        }
         
         const cacheData = {
             date: today,
@@ -182,6 +243,7 @@ async function updatePrayerTimes() {
     try {
         const times = await prayerCalculator.getPrayerTimes();
         
+        // تحديث المصفوفة العالمية
         PrayerTimes = [
             { name: "الفجر", time: times.fajr },
             { name: "الشروق", time: times.sunrise },
@@ -190,6 +252,8 @@ async function updatePrayerTimes() {
             { name: "المغرب", time: times.maghrib },
             { name: "العشاء", time: times.isha }
         ];
+        
+        console.log("تم تحديث مواقيت الصلاة:", PrayerTimes);
         
         if (AppState.currentTab === 'home') {
             renderHome();
@@ -315,12 +379,17 @@ function renderHome() {
         <div class="card">
             <div class="card-title"><i class="fas fa-clock"></i> مواقيت الصلاة</div>
             <div class="prayer-times">
-                ${PrayerTimes.map(prayer => `
-                    <div class="prayer-time ${prayer.name === currentPrayer ? 'current' : ''}">
-                        <div class="name">${prayer.name}</div>
-                        <div class="time">${prayer.time}</div>
-                    </div>
-                `).join('')}
+                ${PrayerTimes.map(prayer => {
+                    const isCurrent = prayer.name === currentPrayer;
+                    const isSunrise = prayer.name === "الشروق";
+                    return `
+                        <div class="prayer-time ${isCurrent ? 'current' : ''} ${isSunrise ? 'sunrise' : ''}">
+                            <div class="name">${prayer.name}</div>
+                            <div class="time">${prayer.time}</div>
+                            ${isCurrent && !isSunrise ? '<div class="current-indicator">✓</div>' : ''}
+                        </div>
+                    `;
+                }).join('')}
             </div>
             <div class="location-update">
                 <i class="fas fa-info-circle"></i> الصلاة الحالية: ${currentPrayer}
