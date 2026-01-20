@@ -10,7 +10,6 @@
     --soft-white: rgba(255, 255, 255, 0.05);
     --shadow: 0 10px 30px rgba(0,0,0,0.3);
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    --theme-name: "ذهبي ليلي";
 }
 
 /* سمة زرقاء ليلية */
@@ -22,7 +21,6 @@
     --bg-color: #0a1520;
     --card-bg: #16202d;
     --text-color: #e0f0ff;
-    --theme-name: "أزرق ليلي";
 }
 
 /* سمة خضراء ليلية */
@@ -34,7 +32,6 @@
     --bg-color: #0a100b;
     --card-bg: #16201a;
     --text-color: #e0ffe7;
-    --theme-name: "أخضر ليلي";
 }
 
 /* سمة أرجوانية ليلية */
@@ -46,7 +43,6 @@
     --bg-color: #150a20;
     --card-bg: #20162d;
     --text-color: #f0e0ff;
-    --theme-name: "أرجواني ليلي";
 }
 
 /* سمة برتقالية ليلية */
@@ -58,7 +54,6 @@
     --bg-color: #1a0e0a;
     --card-bg: #2d1c16;
     --text-color: #ffeae0;
-    --theme-name: "برتقالي ليلي";
 }
 
 /* ========== السمات النهارية ========== */
@@ -74,7 +69,6 @@
     --text-color: #2c3e50;
     --soft-white: rgba(0, 0, 0, 0.08);
     --shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-    --theme-name: "ذهبي نهار";
 }
 
 /* سمة زرقاء نهارية */
@@ -88,7 +82,6 @@
     --text-color: #2c3e50;
     --soft-white: rgba(0, 0, 0, 0.08);
     --shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-    --theme-name: "أزرق نهار";
 }
 
 /* سمة خضراء نهارية */
@@ -102,7 +95,6 @@
     --text-color: #2c3e50;
     --soft-white: rgba(0, 0, 0, 0.08);
     --shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-    --theme-name: "أخضر نهار";
 }
 
 /* سمة أرجوانية نهارية */
@@ -116,7 +108,6 @@
     --text-color: #2c3e50;
     --soft-white: rgba(0, 0, 0, 0.08);
     --shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-    --theme-name: "أرجواني نهار";
 }
 
 /* سمة برتقالية نهارية */
@@ -130,7 +121,6 @@
     --text-color: #2c3e50;
     --soft-white: rgba(0, 0, 0, 0.08);
     --shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-    --theme-name: "برتقالي نهار";
 }
 
 * {
@@ -297,6 +287,7 @@ input[type="checkbox"]:checked::after {
     border-bottom: 1px solid var(--soft-white);
 }
 
+/* ========== مواقيت الصلاة المحسنة ========== */
 .prayer-times {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -310,6 +301,8 @@ input[type="checkbox"]:checked::after {
     border-radius: 10px;
     text-align: center;
     transition: var(--transition);
+    position: relative;
+    border-left: 3px solid transparent;
 }
 
 .prayer-time.current {
@@ -318,6 +311,15 @@ input[type="checkbox"]:checked::after {
     font-weight: bold;
     transform: scale(1.05);
     box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.prayer-time.sunrise {
+    opacity: 0.8;
+    border-left: 3px solid #f39c12 !important;
+}
+
+.prayer-time.sunrise .name {
+    color: #f39c12;
 }
 
 .prayer-time .name {
@@ -334,6 +336,22 @@ input[type="checkbox"]:checked::after {
     font-size: 1.1rem;
     font-weight: bold;
 }
+
+.current-indicator {
+    position: absolute;
+    left: 10px;
+    color: var(--secondary-color);
+    font-size: 1.2rem;
+    background: rgba(46, 204, 113, 0.2);
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ======================================== */
 
 .dhikr-counter {
     background: color-mix(in srgb, var(--primary-color) 10%, transparent);
@@ -455,6 +473,12 @@ input[type="checkbox"]:checked::after {
 .theme-btn.green { background: linear-gradient(135deg, #2ecc71, #27ae60); }
 .theme-btn.purple { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
 .theme-btn.orange { background: linear-gradient(135deg, #e67e22, #d35400); }
+
+.theme-btn.gold-light { background: linear-gradient(135deg, #f8d7a4, #c5a059); }
+.theme-btn.blue-light { background: linear-gradient(135deg, #a8d5f7, #3498db); }
+.theme-btn.green-light { background: linear-gradient(135deg, #a3e9c3, #2ecc71); }
+.theme-btn.purple-light { background: linear-gradient(135deg, #d4b1e6, #9b59b6); }
+.theme-btn.orange-light { background: linear-gradient(135deg, #f7c9a1, #e67e22); }
 
 .theme-label {
     font-size: 0.8rem;
@@ -581,13 +605,6 @@ input[type="checkbox"]:checked::after {
     margin-bottom: 20px;
 }
 
-/* تأثيرات الوضع النهاري */
-body .theme-btn.gold-light { background: linear-gradient(135deg, #f8d7a4, #c5a059); }
-body .theme-btn.blue-light { background: linear-gradient(135deg, #a8d5f7, #3498db); }
-body .theme-btn.green-light { background: linear-gradient(135deg, #a3e9c3, #2ecc71); }
-body .theme-btn.purple-light { background: linear-gradient(135deg, #d4b1e6, #9b59b6); }
-body .theme-btn.orange-light { background: linear-gradient(135deg, #f7c9a1, #e67e22); }
-
 /* تحسينات المسبحة */
 .tasbeeh-container {
     text-align: center;
@@ -667,6 +684,9 @@ body .ayah-of-day {
     padding: 10px;
     border-radius: 10px;
     margin-top: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .location-update button {
@@ -678,8 +698,10 @@ body .ayah-of-day {
     cursor: pointer;
     font-family: 'Tajawal';
     margin-right: 10px;
+    transition: var(--transition);
 }
 
 .location-update button:hover {
     filter: brightness(1.1);
+    transform: translateY(-2px);
 }
