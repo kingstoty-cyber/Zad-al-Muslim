@@ -1,8 +1,9 @@
-name: Deploy Static Content to Pages
+name: Deploy to Pages
 
 on:
   push:
-    branches: ["main"] # تأكد أن هذا هو اسم الفرع الرئيسي عندك
+    branches: ["main"]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -11,13 +12,13 @@ permissions:
 
 concurrency:
   group: "pages"
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   deploy:
     environment:
       name: github-pages
-      url: ${{ steps: deployment.outputs.page_url }}
+      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -27,7 +28,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: '.' # ارفع جميع الملفات في المجلد الرئيسي
+          path: '.'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
