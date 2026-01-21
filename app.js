@@ -264,7 +264,7 @@ class PrayerTimesCalculator {
             console.log("البيانات المستلمة من API:", data.data.timings);
             return data.data.timings;
         } catch (error) {
-            console.error('خطأ ف�� جلب مواقيت الصلاة:', error);
+            console.error('خطأ في جلب مواقيت الصلاة:', error);
             
             // محاولة API بديل
             try {
@@ -886,7 +886,7 @@ function renderTasbeeh() {
                 </div>
                 <div style="text-align: center; flex: 1; min-width: 120px;">
                     <div style="font-size: 2rem; color: var(--accent-color);">${sessionCount}</div>
-                    <div style="font-size: 0.8rem;">��ذه الجلسة</div>
+                    <div style="font-size: 0.8rem;">هذه الجلسة</div>
                 </div>
             </div>
             
