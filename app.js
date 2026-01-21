@@ -1541,4 +1541,3 @@ window.saveManualLocation = saveManualLocation;
 window.getManualLocation = getManualLocation;
 window.clearManualLocation = clearManualLocation;
 window.needsUpdateForManualLocation = needsUpdateForManualLocation;
-```
