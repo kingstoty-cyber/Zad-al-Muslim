@@ -857,6 +857,8 @@ function completeDhikrNow(id) {
 
 // ========== صفحة المسبحة ==========
 
+let tasbeehKeyboardReady = false;
+
 function renderTasbeeh() {
     const content = document.getElementById('page-content');
     content.className = 'fade-in';
@@ -1015,6 +1017,8 @@ function incrementTasbeeh() {
 }
 
 function setupTasbeehKeyboard() {
+    if (tasbeehKeyboardReady) return;
+    tasbeehKeyboardReady = true;
     document.addEventListener('keydown', (e) => {
         if (e.code === 'Space' && AppState.currentTab === 'tasbeeh') {
             e.preventDefault();
@@ -1334,9 +1338,9 @@ function renderSettings() {
 
         <div class="card">
             <div class="card-title"><i class="fas fa-circle-info"></i> حول التطبيق</div>
-            <p>تطبيق <span style="color: var(--primary-color)">زاد المسلم</span> - الإصدار 3.1</p>
+            <p>تطبيق <span style="color: var(--primary-color)">زاد المسلم</span> - الإصدار 4.0</p>
             <p style="font-size: 0.9rem; line-height: 1.6;">
-                تطبيق متكامل لمتابعة العبادات اليومية، الأذكار، وختم القرآن الكريم.<br>
+                تطبيق متكامل لمتابعة العبادات اليومية، الأذكار، وقراءة القرآن الكريم.<br>
                 يعمل بدون إنترنت ويحفظ جميع بياناتك محلياً على جهازك.<br>
                 <strong>خاصية الموقع:</strong> يستخدم GPS أو IP لتحديد الموقع تلقائياً.
             </p>

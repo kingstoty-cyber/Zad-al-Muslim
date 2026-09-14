@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تطبيق زاد المسلم v3.0</title>
+    <title>تطبيق زاد المسلم v4.0</title>
+    <meta name="theme-color" content="#0f5132">
+    <meta name="description" content="زاد المسلم: القرآن الكريم والأذكار والمسبحة ومتابعة العبادات">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
     
     <!-- مكتبات خارجية -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -48,7 +52,7 @@
         </div>
         <div class="nav-item" data-tab="quran">
             <i class="fas fa-book-quran"></i>
-            <span>الختمة</span>
+            <span>القرآن</span>
         </div>
         <div class="nav-item" data-tab="themes">
             <i class="fas fa-palette"></i>
@@ -88,6 +92,7 @@
     <!-- ملفات JavaScript -->
     <script src="data.js"></script>
     <script src="app.js"></script>
+    <script src="quran.js"></script>
 
     <!-- ربط واجهة الإدخال اليدوي بالأحداث (تعتمد على الدوال الموجودة في app.js) -->
     <script>
@@ -172,6 +177,11 @@
           }
         });
       })();
+    </script>
+    <script>
+      if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+        window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(console.warn));
+      }
     </script>
 </body>
 </html>
