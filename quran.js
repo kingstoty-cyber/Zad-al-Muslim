@@ -1,4 +1,4 @@
-/* زاد المسلم v4.0 — قارئ القرآن الكريم
+/* زاد المسلم v4.1 — قارئ القرآن الكريم
  * النص: Tanzil Project (CC BY 3.0)، موزع دون تغيير عبر quran-json.
  */
 (function () {
@@ -104,13 +104,14 @@
                     </article>`;
                 }).join('') || '<div class="quran-empty">لا توجد سورة مطابقة.</div>'}
             </div>
-            <p class="quran-attribution">النص القرآني من مشروع Tanzil، نُقل دون تغيير. الإصدار v4.0</p>`;
+            <p class="quran-attribution">النص القرآني من مشروع Tanzil، نُقل دون تغيير. الإصدار v4.1</p>`;
     }
 
     function openSurah(surahId, ayahNumber = 1) {
         if (!quranData || !chapters) return renderQuran();
         const chapter = chapters[surahId - 1];
         const verses = quranData[String(surahId)] || [];
+        const opening = splitOpeningBasmala(verses[0], surahId);
         currentSurah = surahId;
         const fontSize = Number(localStorage.getItem(KEYS.fontSize)) || 30;
         const completed = readJson(KEYS.completed, []);
@@ -126,6 +127,7 @@
                 <span>حجم الخط</span><button onclick="changeQuranFont(-2)">−</button><output id="quran-font-value">${fontSize}</output><button onclick="changeQuranFont(2)">+</button>
             </div>
             <div class="surah-ornament"><span>سورة</span><h2>${escapeHtml(chapter.name)}</h2></div>
+            ${opening.basmala ? `<div class="bismillah">${escapeHtml(opening.basmala)}</div>` : ''}
             <div id="quran-verses" class="quran-verses" style="--quran-font-size:${fontSize}px">
                 ${verses.map(verse => verseMarkup(verse, surahId)).join('')}
             </div>
@@ -147,13 +149,23 @@
         const bookmarks = readJson(KEYS.bookmarks, []);
         const marked = bookmarks.some(item => item.surah === surahId && item.ayah === verse.verse);
         return `<article class="ayah ${marked ? 'bookmarked' : ''}" id="ayah-${surahId}-${verse.verse}" onclick="saveReadingPosition(${surahId},${verse.verse})">
-            <p>${escapeHtml(verse.text)} <span class="ayah-number">${verse.verse}</span></p>
+            <p>${escapeHtml(splitOpeningBasmala(verse, surahId).text)} <span class="ayah-number">${verse.verse}</span></p>
             <div class="ayah-actions">
                 <button onclick="event.stopPropagation();toggleAyahBookmark(${surahId},${verse.verse})"><i class="${marked ? 'fas' : 'far'} fa-bookmark"></i><span>${marked ? 'محفوظة' : 'حفظ'}</span></button>
                 <button onclick="event.stopPropagation();copyAyah(${surahId},${verse.verse})"><i class="far fa-copy"></i><span>نسخ</span></button>
                 <button onclick="event.stopPropagation();shareAyah(${surahId},${verse.verse})"><i class="fas fa-share-nodes"></i><span>مشاركة</span></button>
             </div>
         </article>`;
+    }
+
+    // نص Tanzil يضع البسملة في بداية الآية الأولى من السور (عدا التوبة).
+    // نعرضها سطراً مستقلاً للمصحف، مع إبقاء النص الأصلي محفوظاً دون أي تعديل.
+    function splitOpeningBasmala(verse, surahId) {
+        const text = verse?.text || '';
+        if (surahId === 1 || surahId === 9 || verse?.verse !== 1) return { basmala: '', text };
+        const match = text.match(/^(ب[ِّ]*سْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ)\s*/);
+        if (!match) return { basmala: '', text };
+        return { basmala: match[1], text: text.slice(match[0].length) };
     }
 
     function saveReadingPosition(surah, ayah, silent = true) {

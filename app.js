@@ -708,17 +708,30 @@ function getAllDhikr() {
     return Object.values(AdhkarDB).flat();
 }
 
-function getCurrentDhikrCategory() {
-    const categories = Object.keys(AdhkarDB);
-    for (let cat of categories) {
-        if (AdhkarDB[cat].some(d => AppState.adhkarHistory[d.id])) {
-            return cat;
-        }
-    }
-    return 'morning';
+let activeDhikrCategory = Storage.load('adhkar_active_category') || 'morning';
+
+function ensureDailyAdhkarProgress() {
+    const today = new Date().toISOString().slice(0, 10);
+    if (Storage.load('adhkar_progress_day') === today) return;
+    const progress = Storage.load('adhkar_progress') || {};
+    [...(AdhkarDB.morning || []), ...(AdhkarDB.evening || [])].forEach(item => delete progress[item.id]);
+    Storage.save('adhkar_progress', progress);
+    Storage.save('adhkar_progress_day', today);
+}
+
+function getDhikrCategoryProgress(category, progress) {
+    const items = AdhkarDB[category] || [];
+    const total = items.reduce((sum, item) => sum + item.count, 0);
+    const current = items.reduce((sum, item) => sum + Math.min(progress[item.id]?.current || 0, item.count), 0);
+    const completed = items.filter(item => progress[item.id]?.completed).length;
+    return { total, current, completed, percentage: total ? Math.round((current / total) * 100) : 0 };
 }
 
 function renderAdhkar(category = 'morning') {
+    if (!AdhkarDB[category]) category = 'morning';
+    ensureDailyAdhkarProgress();
+    activeDhikrCategory = category;
+    Storage.save('adhkar_active_category', category);
     const content = document.getElementById('page-content');
     content.className = 'fade-in';
     
@@ -731,6 +744,7 @@ function renderAdhkar(category = 'morning') {
     };
 
     const adhkarProgress = Storage.load('adhkar_progress') || {};
+    const categoryProgress = getDhikrCategoryProgress(category, adhkarProgress);
     
     let html = `
         <div class="card">
@@ -763,6 +777,16 @@ function renderAdhkar(category = 'morning') {
                         <div style="font-size: 0.7rem;">مجموع الأذكار</div>
                     </div>
                 </div>
+            </div>
+
+            <div class="adhkar-category-progress">
+                <div><strong>${categoryProgress.completed}</strong> من ${AdhkarDB[category].length} ذكر مكتمل</div>
+                <div><strong>${categoryProgress.current}</strong> من ${categoryProgress.total} تكرار</div>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" style="width:${categoryProgress.percentage}%"></div></div>
+            <div class="adhkar-category-actions">
+                <button class="tab-btn" onclick="completeDhikrCategory('${category}')"><i class="fas fa-check-double"></i> إكمال القسم</button>
+                <button class="tab-btn danger" onclick="resetDhikrCategory('${category}')"><i class="fas fa-rotate-left"></i> تصفير القسم</button>
             </div>
         </div>
     `;
@@ -837,7 +861,7 @@ function updateDhikrCount(id, change) {
     };
     
     Storage.save('adhkar_progress', progress);
-    renderAdhkar(getCurrentDhikrCategory());
+    renderAdhkar(activeDhikrCategory);
 }
 
 function completeDhikrNow(id) {
@@ -852,7 +876,24 @@ function completeDhikrNow(id) {
     };
     
     Storage.save('adhkar_progress', progress);
-    renderAdhkar(getCurrentDhikrCategory());
+    renderAdhkar(activeDhikrCategory);
+}
+
+function completeDhikrCategory(category) {
+    const progress = Storage.load('adhkar_progress') || {};
+    (AdhkarDB[category] || []).forEach(item => {
+        progress[item.id] = { current: item.count, completed: true, lastCompleted: new Date().toISOString() };
+    });
+    Storage.save('adhkar_progress', progress);
+    renderAdhkar(category);
+}
+
+function resetDhikrCategory(category) {
+    if (!confirm(`هل تريد تصفير ${category === 'morning' ? 'أذكار الصباح' : category === 'evening' ? 'أذكار المساء' : 'هذا القسم'}؟`)) return;
+    const progress = Storage.load('adhkar_progress') || {};
+    (AdhkarDB[category] || []).forEach(item => delete progress[item.id]);
+    Storage.save('adhkar_progress', progress);
+    renderAdhkar(category);
 }
 
 // ========== صفحة المسبحة ==========
@@ -1338,7 +1379,7 @@ function renderSettings() {
 
         <div class="card">
             <div class="card-title"><i class="fas fa-circle-info"></i> حول التطبيق</div>
-            <p>تطبيق <span style="color: var(--primary-color)">زاد المسلم</span> - الإصدار 4.0</p>
+            <p>تطبيق <span style="color: var(--primary-color)">زاد المسلم</span> - الإصدار 4.1</p>
             <p style="font-size: 0.9rem; line-height: 1.6;">
                 تطبيق متكامل لمتابعة العبادات اليومية، الأذكار، وقراءة القرآن الكريم.<br>
                 يعمل بدون إنترنت ويحفظ جميع بياناتك محلياً على جهازك.<br>
@@ -1525,6 +1566,8 @@ window.updatePrayerTimesWithFeedback = updatePrayerTimesWithFeedback;
 window.togglePrayer = togglePrayer;
 window.updateDhikrCount = updateDhikrCount;
 window.completeDhikrNow = completeDhikrNow;
+window.completeDhikrCategory = completeDhikrCategory;
+window.resetDhikrCategory = resetDhikrCategory;
 window.changeDhikr = changeDhikr;
 window.selectDhikr = selectDhikr;
 window.incrementTasbeeh = incrementTasbeeh;

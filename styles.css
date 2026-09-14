@@ -599,6 +599,28 @@ input[type="checkbox"]:checked::after {
     transform: none !important;
 }
 
+.adhkar-category-progress {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    font-size: 0.83rem;
+    margin: 14px 0 8px;
+    color: var(--text-color);
+}
+
+.adhkar-category-progress strong { color: var(--primary-color); }
+
+.adhkar-category-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 12px;
+}
+
+.adhkar-category-actions .danger {
+    color: #e74c3c;
+}
+
 .counter-display {
     font-size: 1.5rem;
     font-weight: bold;
