@@ -1385,7 +1385,7 @@ function renderSettings() {
 
         <div class="card">
             <div class="card-title"><i class="fas fa-circle-info"></i> حول التطبيق</div>
-            <p>تطبيق <span style="color: var(--primary-color)">زاد المسلم</span> - الإصدار 4.6.0</p>
+            <p>تطبيق <span style="color: var(--primary-color)">زاد المسلم</span> - الإصدار 4.6.1</p>
             <p style="font-size: 0.9rem; line-height: 1.6;">
                 تطبيق متكامل لمتابعة العبادات اليومية، الأذكار، وقراءة القرآن الكريم.<br>
                 يعمل دون اتصال في القرآن والأذكار بعد التحميل الأول ويحفظ تقدمك محلياً.<br>
@@ -1421,7 +1421,7 @@ async function clearAllData() {
     if (confirm("هل أنت متأكد من حذف بيانات زاد المسلم؟ لا يمكن التراجع عن هذا الإجراء!")) {
         Object.keys(localStorage).filter(key => /^(zad_|quran_|prayer_|adhkar_|tasbeeh_|current_dhikr_|theme_|auto_theme|manual_location|user_location|cached_prayer_times)/.test(key)).forEach(key => localStorage.removeItem(key));
         if ('caches' in window) {
-            try { await caches.delete('zad-quran-audio-v45'); } catch (_) {}
+            try { await Promise.all([caches.delete('zad-quran-audio-v45'), caches.delete('zad-quran-surah-audio-v461')]); } catch (_) {}
         }
         AppState = {
             currentTab: 'home',

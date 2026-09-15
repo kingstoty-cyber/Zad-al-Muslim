@@ -25,3 +25,10 @@ EveryAyah Quran Files
 https://everyayah.com/recitations_ayat.html
 The application links to public audio files and does not redistribute audio bytes in the project ZIP.
 The upstream site does not publish a clear standalone licence page; reciter rights remain with their owners.
+
+Whole-surah recitation catalogue and files
+MP3Quran API and servers — https://mp3quran.net/api/v3/reciters?language=ar
+Qaloun.app / Libyan upload server (Abdul Hamid Al-Qariou) — https://qaloun.app/
+
+Official Libyan Qalun Mushaf (external link; pages are not bundled)
+Libyan General Authority of Awqaf — https://mushaf.awqaf.gov.ly/

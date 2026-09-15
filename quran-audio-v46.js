@@ -467,6 +467,7 @@
     window.updateAudioDownloadUnit = updateDownloadUnit;
     window.deleteQuranSurahAudio = deleteSurahAudio;
     window.clearAllQuranAudio = clearAllAudioDownloads;
+    window.stopQuranAyahAudio = stopAudio;
     window.openReciterLibrary = openReciterLibrary;
     window.filterReciterLibrary = renderReciterLibrary;
     window.selectQuranReciter = selectReciter;
