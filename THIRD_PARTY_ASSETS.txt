@@ -23,3 +23,5 @@ https://github.com/quran-center/quran-meta
 Quran recitation audio (streamed/downloaded by the user; not bundled)
 EveryAyah Quran Files
 https://everyayah.com/recitations_ayat.html
+The application links to public audio files and does not redistribute audio bytes in the project ZIP.
+The upstream site does not publish a clear standalone licence page; reciter rights remain with their owners.

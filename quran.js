@@ -1,4 +1,4 @@
-/* زاد المسلم v4.5.0 — قارئ القرآن الكريم
+/* زاد المسلم v4.6.0 — قارئ القرآن الكريم
  * النص: Tanzil Project (CC BY 3.0)، موزع دون تغيير عبر quran-json.
  */
 (function () {
@@ -104,7 +104,7 @@
                     </article>`;
                 }).join('') || '<div class="quran-empty">لا توجد سورة مطابقة.</div>'}
             </div>
-            <p class="quran-attribution">النص القرآني من مشروع Tanzil، نُقل دون تغيير. الإصدار v4.5.0</p>`;
+            <p class="quran-attribution">النص القرآني من مشروع Tanzil، نُقل دون تغيير. الإصدار v4.6.0</p>`;
     }
 
     function openSurah(surahId, ayahNumber = 1) {

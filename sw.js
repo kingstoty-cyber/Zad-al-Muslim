@@ -1,12 +1,12 @@
-const CACHE_NAME = 'zad-al-muslim-v4-5-0';
+const CACHE_NAME = 'zad-al-muslim-v4-6-0';
 const AUDIO_CACHE = 'zad-quran-audio-v45';
 const APP_ASSETS = [
-  './', './index.html', './offline.html', './styles.css', './data.js', './app.js', './quran.js', './prayer-v42.js', './enhancements-v43.js', './quran-v44.js', './quran-audio-v45.js',
+  './', './index.html', './offline.html', './styles.css', './data.js', './app.js', './quran.js', './prayer-v42.js', './enhancements-v43.js', './quran-v44.js', './quran-audio-v46.js',
   './assets/css/fontawesome.min.css', './assets/css/local-fonts.css',
   './assets/webfonts/fa-solid-900.woff2', './assets/webfonts/fa-regular-400.woff2',
   './assets/fonts/amiri.ttf', './assets/fonts/tajawal-300.ttf', './assets/fonts/tajawal-500.ttf', './assets/fonts/tajawal-800.ttf',
   './manifest.webmanifest', './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png',
-  './quran-data/chapters.json', './quran-data/uthmani.json', './quran-data/navigation.json', './QURAN_DATA_LICENSE.txt', './THIRD_PARTY_ASSETS.txt'
+  './quran-data/chapters.json', './quran-data/uthmani.json', './quran-data/navigation.json', './quran-data/reciters.json', './QURAN_DATA_LICENSE.txt', './THIRD_PARTY_ASSETS.txt'
 ];
 
 self.addEventListener('install', event => {
