@@ -1340,9 +1340,8 @@ function filterThemes(filter) {
 
 function changeTheme(themeId) {
     applyTheme(themeId);
-    if (AppState.currentTab === 'themes') {
-        renderThemes();
-    }
+    if (AppState.currentTab === 'themes') renderThemes();
+    if (AppState.currentTab === 'settings') window.renderSettings?.();
 }
 
 // ========== صفحة الإعدادات ==========
@@ -1360,6 +1359,8 @@ function renderSettings() {
     const autoTheme = Storage.load('auto_theme') || false;
     
     content.innerHTML = `
+        <div class="settings-heading"><i class="fas fa-user-gear"></i><div><h2>الإعدادات</h2><p>المظهر، الصلاة، البيانات وخصائص التطبيق في مكان واحد.</p></div></div>
+        <h3 class="settings-group-title">ملخص النشاط</h3>
         <div class="card">
             <div class="card-title"><i class="fas fa-chart-line"></i> إحصائياتك</div>
             <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin: 15px 0;">
@@ -1382,7 +1383,8 @@ function renderSettings() {
             </div>
         </div>
 
-        <div class="card">
+        <h3 class="settings-group-title">المظهر والقراءة</h3>
+        <div class="card settings-card">
             <div class="card-title"><i class="fas fa-adjust"></i> الوضع النهاري / الليلي</div>
             
             <div style="display: flex; gap: 15px; margin: 20px 0;">
@@ -1420,7 +1422,19 @@ function renderSettings() {
             </div>
         </div>
 
-        <div class="card">
+        <div class="card settings-card">
+            <div class="card-title"><i class="fas fa-palette"></i> ألوان التطبيق</div>
+            <p class="settings-description">اختر السمة التي تناسب القراءة نهارًا أو ليلًا. يتم حفظ اختيارك تلقائيًا.</p>
+            <div class="settings-theme-filters">
+                <button class="app-button" onclick="filterThemes('dark')"><i class="fas fa-moon"></i> ليلية</button>
+                <button class="app-button" onclick="filterThemes('light')"><i class="fas fa-sun"></i> نهارية</button>
+                <button class="app-button" onclick="filterThemes('all')"><i class="fas fa-border-all"></i> الكل</button>
+            </div>
+            <div class="theme-selector" id="themes-container">${renderFilteredThemes('all')}</div>
+        </div>
+
+        <h3 class="settings-group-title">التحكم والبيانات</h3>
+        <div class="card settings-card">
             <div class="card-title"><i class="fas fa-gears"></i> الإعدادات والتحكم</div>
             <button class="btn-primary" style="margin-bottom: 10px;" onclick="resetToday()">
                 <i class="fas fa-redo"></i> إعادة تعيين أعمال اليوم
@@ -1435,7 +1449,7 @@ function renderSettings() {
 
         <div class="card">
             <div class="card-title"><i class="fas fa-circle-info"></i> حول التطبيق</div>
-            <p>تطبيق <span style="color: var(--primary-color)">زاد المسلم</span> - الإصدار ${window.ZAD_APP?.version || '4.6.2'}</p>
+            <p>تطبيق <span style="color: var(--primary-color)">زاد المسلم</span> - الإصدار ${window.ZAD_APP?.version || '4.6.3'}</p>
             <p style="font-size: 0.9rem; line-height: 1.6;">
                 تطبيق متكامل لمتابعة العبادات اليومية، الأذكار، وقراءة القرآن الكريم.<br>
                 يعمل دون اتصال في القرآن والأذكار بعد التحميل الأول ويحفظ تقدمك محلياً.<br>
@@ -1507,6 +1521,7 @@ function loadTab(tabName) {
         case 'adhkar': (window.renderAdhkar || renderAdhkar)(); break;
         case 'tasbeeh': (window.renderTasbeeh || renderTasbeeh)(); break;
         case 'quran': (window.renderQuran || renderQuran)(); break;
+        case 'audio-quran': window.renderAudioQuran?.(); break;
         case 'themes': (window.renderThemes || renderThemes)(); break;
         case 'settings': (window.renderSettings || renderSettings)(); break;
     }

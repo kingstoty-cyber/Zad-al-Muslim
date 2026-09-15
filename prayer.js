@@ -209,13 +209,14 @@
     const oldSettings = window.renderSettings || renderSettings;
     function renderSettingsV42() {
         oldSettings(); const content=document.getElementById('page-content'); const first=content.querySelector('.card'); const s=settings();
-        const card=document.createElement('div'); card.className='card prayer-settings'; card.innerHTML=`<div class="card-title"><i class="fas fa-sliders"></i> إعدادات الصلاة الدقيقة</div>
+        const title=document.createElement('h3');title.className='settings-group-title';title.textContent='الصلاة والمواقيت';
+        const card=document.createElement('div'); card.className='card prayer-settings settings-card'; card.innerHTML=`<div class="card-title"><i class="fas fa-sliders"></i> إعدادات الصلاة الدقيقة</div>
           <label>طريقة الحساب<select id="calc-method">${Object.entries(METHODS).map(([id,n])=>`<option value="${id}" ${Number(s.method)===Number(id)?'selected':''}>${n}</option>`).join('')}</select></label>
           <label>مذهب العصر<select id="asr-school"><option value="0" ${Number(s.school)===0?'selected':''}>الشافعي / المالكي / الحنبلي</option><option value="1" ${Number(s.school)===1?'selected':''}>الحنفي</option></select></label>
           <label>تنسيق الوقت<select id="prayer-time-format"><option value="24" ${s.timeFormat==='24'?'selected':''}>24 ساعة — 17:30</option><option value="12" ${s.timeFormat==='12'?'selected':''}>12 ساعة — 5:30 م</option></select></label>
           <div class="offset-grid">${prayerMap.map(([n,k])=>`<label>${n}<input type="number" id="offset-${k}" min="-30" max="30" value="${s.offsets[k]||0}"><small>دقيقة</small></label>`).join('')}</div>
           <button class="btn-primary" onclick="savePrayerSettings()"><i class="fas fa-floppy-disk"></i> حفظ وتحديث المواقيت</button><p class="accuracy-note">اضبط الفروق فقط بعد مقارنة مواقيت التطبيق بجدول المسجد أو الجهة المعتمدة في مدينتك.</p>`;
-        content.insertBefore(card, first?.nextSibling || first);
+        const anchor=first?.nextSibling||first;content.insertBefore(title,anchor);content.insertBefore(card,anchor);
         content.querySelectorAll('p').forEach(p=>{if(p.textContent.includes('الإصدار 4.1'))p.innerHTML=p.innerHTML.replace('الإصدار 4.1','الإصدار 4.2');});
     }
     async function savePrayerSettingsUI() {
