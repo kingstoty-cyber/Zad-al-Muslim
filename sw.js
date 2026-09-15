@@ -1,6 +1,6 @@
-const CACHE_NAME = 'zad-al-muslim-v4-1-1';
+const CACHE_NAME = 'zad-al-muslim-v4-2-0';
 const APP_ASSETS = [
-  './', './index.html', './styles.css', './data.js', './app.js', './quran.js',
+  './', './index.html', './styles.css', './data.js', './app.js', './quran.js', './prayer-v42.js',
   './manifest.webmanifest', './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png',
   './quran-data/chapters.json', './quran-data/uthmani.json', './QURAN_DATA_LICENSE.txt'
 ];

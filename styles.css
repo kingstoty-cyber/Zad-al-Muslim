@@ -494,6 +494,24 @@ body {
     margin-right: 5px;
 }
 
+/* v4.2: prayer accuracy, countdown and Qibla */
+.next-prayer-card { text-align: center; background: linear-gradient(135deg, color-mix(in srgb, var(--primary-color) 20%, var(--card-bg)), var(--card-bg)); }
+.next-prayer-name { font-size: 1.15rem; color: var(--accent-color); margin-top: 8px; }
+.countdown { direction: ltr; font-variant-numeric: tabular-nums; font-size: clamp(2rem, 10vw, 3.5rem); font-weight: 800; letter-spacing: .08em; color: var(--primary-color); margin: 10px 0; }
+.prayer-meta { margin: 16px 0 10px; padding: 12px; border-radius: 10px; background: color-mix(in srgb, var(--primary-color) 8%, transparent); line-height: 1.8; }
+.source-status.ok { color: #2ecc71; }.source-status.warning { color: #f39c12; }
+.prayer-actions { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; margin-top: 12px; }
+.qibla-button { background: var(--accent-color); }
+.accuracy-note { font-size: .8rem; line-height: 1.6; opacity: .82; margin: 12px 0 0; }
+.progress-caption,.center-text { text-align:center; margin-top:10px; }.ayah-text { font-family:'Amiri',serif; font-size:1.3rem; line-height:1.9; margin:0; }.ayah-reference { color:var(--primary-color); }
+.prayer-settings label { display:block; margin: 13px 0 6px; }
+.prayer-settings select,.prayer-settings input { width:100%; box-sizing:border-box; padding:10px; border-radius:8px; border:1px solid color-mix(in srgb,var(--text-color) 20%,transparent); background:var(--card-bg); color:var(--text-color); }
+.offset-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin:14px 0; }.offset-grid label { text-align:center; }.offset-grid small { display:block; opacity:.7; margin-top:3px; }
+.qibla-card { text-align:center; }.compass { position:relative; width:min(72vw,280px); aspect-ratio:1; margin:24px auto; border:8px double var(--primary-color); border-radius:50%; box-shadow:inset 0 0 30px rgba(0,0,0,.25); background:radial-gradient(circle,color-mix(in srgb,var(--primary-color) 10%,transparent),transparent 65%); }
+.compass-mark { position:absolute; font-weight:800; color:var(--text-color); }.compass-mark.north{top:8px;left:50%;transform:translateX(-50%);color:#e74c3c}.compass-mark.south{bottom:8px;left:50%;transform:translateX(-50%)}.compass-mark.east{right:12px;top:50%;transform:translateY(-50%)}.compass-mark.west{left:12px;top:50%;transform:translateY(-50%)}
+.qibla-needle { position:absolute; inset:34px; display:flex; align-items:flex-start; justify-content:center; transform-origin:center; transition:transform .18s ease-out; }.qibla-needle i { font-size:3rem; color:var(--accent-color); filter:drop-shadow(0 2px 3px rgba(0,0,0,.4)); transform:rotate(-45deg); }.qibla-degree { font-size:1.05rem; }.qibla-degree strong { color:var(--primary-color); font-size:1.5rem; }
+@media(max-width:560px){.offset-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.prayer-actions{grid-template-columns:1fr}}
+
 /* ========== متابعة الصلوات ========== */
 
 .list-item {

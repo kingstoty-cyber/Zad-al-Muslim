@@ -1379,11 +1379,11 @@ function renderSettings() {
 
         <div class="card">
             <div class="card-title"><i class="fas fa-circle-info"></i> حول التطبيق</div>
-            <p>تطبيق <span style="color: var(--primary-color)">زاد المسلم</span> - الإصدار 4.1</p>
+            <p>تطبيق <span style="color: var(--primary-color)">زاد المسلم</span> - الإصدار 4.2</p>
             <p style="font-size: 0.9rem; line-height: 1.6;">
                 تطبيق متكامل لمتابعة العبادات اليومية، الأذكار، وقراءة القرآن الكريم.<br>
-                يعمل بدون إنترنت ويحفظ جميع بياناتك محلياً على جهازك.<br>
-                <strong>خاصية الموقع:</strong> يستخدم GPS أو IP لتحديد الموقع تلقائياً.
+                يعمل دون اتصال في القرآن والأذكار بعد التحميل الأول ويحفظ تقدمك محلياً.<br>
+                <strong>مواقيت الصلاة:</strong> تحتاج اتصالاً عند التحديث وترسل الإحداثيات فقط إلى مزود المواقيت.
             </p>
             <div style="display: flex; gap: 15px; margin-top: 15px; justify-content: center;">
                 <div style="text-align: center;">

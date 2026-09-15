@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تطبيق زاد المسلم v4.1</title>
+    <title>تطبيق زاد المسلم v4.2</title>
     <meta name="theme-color" content="#0f5132">
     <meta name="description" content="زاد المسلم: القرآن الكريم والأذكار والمسبحة ومتابعة العبادات">
     <link rel="manifest" href="manifest.webmanifest">
@@ -93,6 +93,7 @@
     <script src="data.js"></script>
     <script src="app.js"></script>
     <script src="quran.js"></script>
+    <script src="prayer-v42.js"></script>
 
     <!-- ربط واجهة الإدخال اليدوي بالأحداث (تعتمد على الدوال الموجودة في app.js) -->
     <script>
@@ -132,8 +133,8 @@
           const lon = parseFloat(lonInput.value);
           const city = cityInput.value.trim();
 
-          if (Number.isNaN(lat) || Number.isNaN(lon)) {
-            alert('يرجى إدخال قيم صحيحة لخط العرض وخط الطول.');
+          if (Number.isNaN(lat) || Number.isNaN(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+            alert('أدخل خط عرض بين -90 و90، وخط طول بين -180 و180.');
             return;
           }
 
@@ -164,7 +165,8 @@
           }
           // مسح الكاش حتى يعيد التحميل لاحقاً
           localStorage.removeItem('cached_prayer_times');
-          alert('تمت إزالة الموقع اليدوي. سيتم استخدام GPS/IP أو الحساب المحلي عند التحديث التالي.');
+          localStorage.removeItem('zad_prayer_v42_cache');
+          alert('تمت إزالة الموقع اليدوي. سيُطلب GPS عند التحديث التالي، ولن تُعرض أوقات محلية تخمينية.');
           closePanel();
           if (typeof renderHome === 'function') renderHome();
         });
