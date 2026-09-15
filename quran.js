@@ -1,4 +1,4 @@
-/* زاد المسلم v4.4.1 — قارئ القرآن الكريم
+/* زاد المسلم v4.5.0 — قارئ القرآن الكريم
  * النص: Tanzil Project (CC BY 3.0)، موزع دون تغيير عبر quran-json.
  */
 (function () {
@@ -104,7 +104,7 @@
                     </article>`;
                 }).join('') || '<div class="quran-empty">لا توجد سورة مطابقة.</div>'}
             </div>
-            <p class="quran-attribution">النص القرآني من مشروع Tanzil، نُقل دون تغيير. الإصدار v4.4.1</p>`;
+            <p class="quran-attribution">النص القرآني من مشروع Tanzil، نُقل دون تغيير. الإصدار v4.5.0</p>`;
     }
 
     function openSurah(surahId, ayahNumber = 1) {
@@ -139,6 +139,9 @@
                 <button onclick="renderQuranHome()"><i class="fas fa-list"></i> الفهرس</button>
                 <button ${surahId >= 114 ? 'disabled' : ''} onclick="openSurah(${surahId + 1},1)">التالية <i class="fas fa-chevron-left"></i></button>
             </div>`;
+        if (typeof window.onQuranSurahOpened === 'function') {
+            window.onQuranSurahOpened({surahId, ayahNumber, chapter, verses});
+        }
         requestAnimationFrame(() => {
             const target = document.getElementById(`ayah-${surahId}-${ayahNumber}`);
             if (target) target.scrollIntoView({block: 'center'});
@@ -152,6 +155,7 @@
             <p>${escapeHtml(splitOpeningBasmala(verse, surahId).text)} <span class="ayah-number">${verse.verse}</span></p>
             <div class="ayah-actions">
                 <button onclick="event.stopPropagation();toggleAyahBookmark(${surahId},${verse.verse})"><i class="${marked ? 'fas' : 'far'} fa-bookmark"></i><span>${marked ? 'محفوظة' : 'حفظ'}</span></button>
+                <button onclick="event.stopPropagation();playQuranAyah(${surahId},${verse.verse})"><i class="fas fa-play"></i><span>استماع</span></button>
                 <button onclick="event.stopPropagation();copyAyah(${surahId},${verse.verse})"><i class="far fa-copy"></i><span>نسخ</span></button>
                 <button onclick="event.stopPropagation();shareAyah(${surahId},${verse.verse})"><i class="fas fa-share-nodes"></i><span>مشاركة</span></button>
             </div>

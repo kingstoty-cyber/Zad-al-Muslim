@@ -19,3 +19,7 @@ Quran navigation metadata generated with quran-meta 6.0.17 (Hafs)
 Copyright quran-center contributors.
 MIT License.
 https://github.com/quran-center/quran-meta
+
+Quran recitation audio (streamed/downloaded by the user; not bundled)
+EveryAyah Quran Files
+https://everyayah.com/recitations_ayat.html

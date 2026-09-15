@@ -8,10 +8,10 @@
   function read(key,fallback=null){try{return JSON.parse(localStorage.getItem(key))??fallback}catch(_){return fallback}}
   function localDay(date=new Date()){return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`}
   function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-  function appData(){const data={};Object.keys(localStorage).filter(k=>APP_KEY.test(k)).sort().forEach(k=>data[k]=localStorage.getItem(k));return data}
+  function appData(){const data={};Object.keys(localStorage).filter(k=>APP_KEY.test(k)&&k!=='zad_audio_downloads').sort().forEach(k=>data[k]=localStorage.getItem(k));return data}
 
   function exportData(){
-    const payload={app:'زاد المسلم',version:'4.4.1',exportedAt:new Date().toISOString(),data:appData()};
+    const payload={app:'زاد المسلم',version:'4.5.0',exportedAt:new Date().toISOString(),data:appData()};
     const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});const a=document.createElement('a');
     a.href=URL.createObjectURL(blob);a.download=`zad-al-muslim-backup-${new Date().toISOString().slice(0,10)}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
   }
