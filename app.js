@@ -1379,7 +1379,7 @@ function renderSettings() {
 
         <div class="card">
             <div class="card-title"><i class="fas fa-circle-info"></i> حول التطبيق</div>
-            <p>تطبيق <span style="color: var(--primary-color)">زاد المسلم</span> - الإصدار 4.3</p>
+            <p>تطبيق <span style="color: var(--primary-color)">زاد المسلم</span> - الإصدار 4.4</p>
             <p style="font-size: 0.9rem; line-height: 1.6;">
                 تطبيق متكامل لمتابعة العبادات اليومية، الأذكار، وقراءة القرآن الكريم.<br>
                 يعمل دون اتصال في القرآن والأذكار بعد التحميل الأول ويحفظ تقدمك محلياً.<br>
@@ -1447,7 +1447,7 @@ function loadTab(tabName) {
         case 'home': renderHome(); break;
         case 'adhkar': renderAdhkar(); break;
         case 'tasbeeh': renderTasbeeh(); break;
-        case 'quran': renderQuran(); break;
+        case 'quran': (window.renderQuran || renderQuran)(); break;
         case 'themes': renderThemes(); break;
         case 'settings': renderSettings(); break;
     }
