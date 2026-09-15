@@ -1,0 +1,16 @@
+Third-party UI assets bundled for offline use
+
+Font Awesome Free 6.4.0
+Copyright Fonticons, Inc.
+Icons: CC BY 4.0; Fonts: SIL OFL 1.1; Code: MIT License.
+https://fontawesome.com/license/free
+
+Amiri font
+Copyright Khaled Hosny and contributors.
+SIL Open Font License 1.1.
+https://github.com/aliftype/amiri
+
+Tajawal font
+Copyright Boutros Fonts and contributors.
+SIL Open Font License 1.1.
+https://github.com/Gue3bara/Tajawal

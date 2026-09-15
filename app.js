@@ -915,7 +915,7 @@ function renderTasbeeh() {
     content.innerHTML = `
         <div class="card" style="text-align: center; padding: 20px;">
             <div class="card-title" style="justify-content: center;">
-                <i class="fas fa-bead-tree"></i> المسبحة الإلكترونية
+                <i class="fas fa-hands-praying"></i> المسبحة الإلكترونية
             </div>
             
             <div style="display: flex; justify-content: space-between; margin: 20px 0; flex-wrap: wrap;">
@@ -1379,7 +1379,7 @@ function renderSettings() {
 
         <div class="card">
             <div class="card-title"><i class="fas fa-circle-info"></i> حول التطبيق</div>
-            <p>تطبيق <span style="color: var(--primary-color)">زاد المسلم</span> - الإصدار 4.2</p>
+            <p>تطبيق <span style="color: var(--primary-color)">زاد المسلم</span> - الإصدار 4.3</p>
             <p style="font-size: 0.9rem; line-height: 1.6;">
                 تطبيق متكامل لمتابعة العبادات اليومية، الأذكار، وقراءة القرآن الكريم.<br>
                 يعمل دون اتصال في القرآن والأذكار بعد التحميل الأول ويحفظ تقدمك محلياً.<br>
@@ -1412,8 +1412,8 @@ function resetToday() {
 }
 
 function clearAllData() {
-    if (confirm("هل أنت متأكد من حذف جميع البيانات؟ لا يمكن التراجع عن هذا الإجراء!")) {
-        localStorage.clear();
+    if (confirm("هل أنت متأكد من حذف بيانات زاد المسلم؟ لا يمكن التراجع عن هذا الإجراء!")) {
+        Object.keys(localStorage).filter(key => /^(zad_|quran_|prayer_|adhkar_|tasbeeh_|current_dhikr_|theme_|auto_theme|manual_location|user_location|cached_prayer_times)/.test(key)).forEach(key => localStorage.removeItem(key));
         AppState = {
             currentTab: 'home',
             currentTheme: 'default',
@@ -1532,9 +1532,8 @@ window.onload = async () => {
     window.addEventListener('scroll', handleScroll);
     
     // 9. طلب إذن الإشعارات
-    if ('Notification' in window && Notification.permission === 'default') {
-        Notification.requestPermission();
-    }
+    // يطلب إذن الإشعارات من زر واضح داخل الإعدادات فقط، لأن المتصفحات
+    // تمنع طلب الإذن التلقائي دون تفاعل مباشر من المستخدم.
     
     // 10. إعداد الوضع التلقائي
     if (AppState.autoTheme) {

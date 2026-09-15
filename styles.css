@@ -1154,3 +1154,12 @@ body .theme-orange-light .ayah-of-day {
 }
 
 /* ========== النهاية ========== */
+
+/* v4.3 — Home dashboard, PWA and backup */
+.app-status-banner{position:sticky;top:0;z-index:10050;display:flex;align-items:center;justify-content:center;gap:12px;padding:10px 14px;text-align:center;background:#245b9b;color:#fff}.app-status-banner.warning{background:#8a5700}.app-status-banner.success{background:#167044}.app-status-banner button{border:0;border-radius:8px;padding:6px 12px;background:#fff;color:#111;font-family:inherit;font-weight:700}
+.date-grid,.home-progress{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.date-grid>div{padding:12px;border-radius:12px;background:color-mix(in srgb,var(--primary-color) 9%,transparent);display:grid;gap:4px}.date-grid i{color:var(--primary-color)}.date-grid small,.home-progress small{opacity:.7}.date-grid strong{font-size:.84rem;line-height:1.5}
+.home-progress{margin-top:10px}.home-progress button{display:flex;align-items:center;gap:10px;text-align:right;padding:12px;border:1px solid var(--soft-white);border-radius:12px;background:var(--card-bg);color:var(--text-color);font-family:inherit}.home-progress button>i{font-size:1.4rem;color:var(--accent-color)}.home-progress span{display:grid;gap:3px}
+.quick-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:13px}.quick-actions button{display:grid;justify-items:center;gap:6px;padding:10px 4px;border:0;border-radius:11px;background:color-mix(in srgb,var(--primary-color) 13%,transparent);color:var(--text-color);font-family:inherit}.quick-actions i{font-size:1.2rem;color:var(--primary-color)}
+.settings-actions{display:grid;gap:10px}.settings-actions .btn-primary:disabled{opacity:.55;cursor:not-allowed}.danger-btn{background:#b23b3b}.backup-btn{background:var(--accent-color)}.alert-row{display:grid!important;grid-template-columns:1fr 85px;align-items:center;gap:10px;margin:0!important;padding:10px;border-radius:10px;background:color-mix(in srgb,var(--primary-color) 8%,transparent)}
+.tasbeeh-stats>div{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.tasbeeh-stats span{display:grid;text-align:center;padding:13px;border-radius:11px;background:color-mix(in srgb,var(--primary-color) 9%,transparent)}.tasbeeh-stats strong{font-size:1.5rem;color:var(--primary-color)}.tasbeeh-stats small{opacity:.7}
+@media(max-width:430px){.date-grid,.home-progress{grid-template-columns:1fr}.quick-actions{grid-template-columns:repeat(2,1fr)}}

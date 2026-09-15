@@ -17,6 +17,7 @@
     ];
     let countdownTimer = null;
     let compassHandler = null;
+    let compassTimeout = null;
 
     function safeJSON(key) { try { return JSON.parse(localStorage.getItem(key) || 'null'); } catch (_) { return null; } }
     function settings() {
@@ -146,17 +147,51 @@
         const q = bearing(Number(loc.lat), Number(loc.lon));
         content.innerHTML = `<div class="card qibla-card"><div class="card-title"><i class="fas fa-kaaba"></i> اتجاه القبلة</div><p>${locationLabel(loc)}</p>
           <div class="compass"><div class="compass-mark north">ش</div><div class="compass-mark east">ق</div><div class="compass-mark south">ج</div><div class="compass-mark west">غ</div><div id="qibla-needle" class="qibla-needle" style="transform:rotate(${q}deg)"><i class="fas fa-location-arrow"></i></div></div>
-          <div class="qibla-degree"><strong>${q.toFixed(1)}°</strong> من الشمال — ${directionName(q)}</div><div id="compass-status" class="accuracy-note">السهم ثابت بالنسبة للشمال. شغّل البوصلة لتوجيهه لحظياً.</div>
-          <div class="prayer-actions"><button class="btn-primary" onclick="startQiblaCompass()"><i class="fas fa-compass"></i> تشغيل البوصلة</button><button class="btn-primary qibla-button" onclick="renderHome()">عودة للرئيسية</button></div>
+          <div class="qibla-degree"><strong>${q.toFixed(1)}°</strong> من الشمال — ${directionName(q)}</div><div id="compass-status" class="accuracy-note" role="status">السهم ثابت بالنسبة للشمال. اضغط تشغيل البوصلة ثم حرّك الهاتف.</div>
+          <div class="prayer-actions"><button id="compass-start" class="btn-primary" onclick="startQiblaCompass()"><i class="fas fa-compass"></i> تشغيل البوصلة</button><button class="btn-primary qibla-button" onclick="renderHome()">عودة للرئيسية</button></div>
           <p class="accuracy-note">ضع الهاتف أفقياً، وابتعد عن المعادن والمغناطيس. البوصلة وسيلة مساعدة وقد تحتاج إلى معايرة بحركة الرقم 8.</p></div>`;
         window.__qiblaBearing = q;
     }
     async function startCompass() {
         if (typeof DeviceOrientationEvent === 'undefined') return alert('مستشعر البوصلة غير متاح في هذا الجهاز أو المتصفح. استخدم الدرجة المعروضة مع بوصلة خارجية.');
-        if (typeof DeviceOrientationEvent.requestPermission === 'function') { const result = await DeviceOrientationEvent.requestPermission(); if (result !== 'granted') return alert('لم يتم منح إذن البوصلة.'); }
-        if (compassHandler) window.removeEventListener('deviceorientationabsolute', compassHandler);
-        compassHandler = e => { const heading = Number.isFinite(e.webkitCompassHeading) ? e.webkitCompassHeading : (e.absolute && Number.isFinite(e.alpha) ? 360-e.alpha : null); if (heading === null) return; const needle=document.getElementById('qibla-needle'); if(needle) needle.style.transform=`rotate(${window.__qiblaBearing-heading}deg)`; const s=document.getElementById('compass-status'); if(s) s.textContent=`اتجاه الهاتف: ${heading.toFixed(0)}° — حرّك الهاتف حتى يشير السهم للأعلى.`; };
-        window.addEventListener('deviceorientationabsolute', compassHandler, true); window.addEventListener('deviceorientation', compassHandler, true);
+        try {
+            if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+                const result = await DeviceOrientationEvent.requestPermission();
+                if (result !== 'granted') return alert('لم يتم منح إذن البوصلة. فعّل إذن الحركة والاتجاه للموقع من إعدادات المتصفح.');
+            }
+        } catch (_) { return alert('تعذر طلب إذن البوصلة. افتح الموقع عبر HTTPS واسمح بالحركة والاتجاه.'); }
+        if (compassHandler) {
+            window.removeEventListener('deviceorientationabsolute', compassHandler, true);
+            window.removeEventListener('deviceorientation', compassHandler, true);
+        }
+        let readings = 0;
+        const status = document.getElementById('compass-status');
+        const button = document.getElementById('compass-start');
+        if (status) status.textContent = 'جارٍ انتظار مستشعر الاتجاه… حرّك الهاتف بحركة الرقم 8.';
+        if (button) button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> البوصلة تعمل';
+        compassHandler = e => {
+            let heading = null;
+            if (Number.isFinite(e.webkitCompassHeading)) heading = e.webkitCompassHeading;
+            else if (Number.isFinite(e.alpha)) {
+                const screenAngle = Number(screen.orientation?.angle ?? window.orientation ?? 0) || 0;
+                heading = (360 - e.alpha + screenAngle + 360) % 360;
+            }
+            if (heading === null) return;
+            readings += 1;
+            const needle = document.getElementById('qibla-needle');
+            if (needle) needle.style.transform = `rotate(${window.__qiblaBearing - heading}deg)`;
+            const s = document.getElementById('compass-status');
+            if (s) s.textContent = `البوصلة نشطة — اتجاه الهاتف ${heading.toFixed(0)}°. اجعل السهم متجهًا إلى أعلى الشاشة.`;
+            if (readings === 1 && compassTimeout) clearTimeout(compassTimeout);
+        };
+        window.addEventListener('deviceorientationabsolute', compassHandler, true);
+        window.addEventListener('deviceorientation', compassHandler, true);
+        compassTimeout = setTimeout(() => {
+            if (readings) return;
+            const s = document.getElementById('compass-status');
+            if (s) s.textContent = 'لم يرسل الهاتف بيانات البوصلة. فعّل إذن الحركة/المستشعرات في Chrome، وأوقف توفير الطاقة، ثم أعد المحاولة.';
+            if (button) button.innerHTML = '<i class="fas fa-rotate"></i> إعادة المحاولة';
+        }, 7000);
     }
     const oldSettings = window.renderSettings || renderSettings;
     function renderSettingsV42() {
