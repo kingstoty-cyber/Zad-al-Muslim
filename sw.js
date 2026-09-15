@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zad-al-muslim-v4-4-0';
+const CACHE_NAME = 'zad-al-muslim-v4-4-1';
 const APP_ASSETS = [
   './', './index.html', './offline.html', './styles.css', './data.js', './app.js', './quran.js', './prayer-v42.js', './enhancements-v43.js', './quran-v44.js',
   './assets/css/fontawesome.min.css', './assets/css/local-fonts.css',
@@ -31,6 +31,10 @@ self.addEventListener('fetch', event => {
       if (response.ok && new URL(event.request.url).origin === self.location.origin) caches.open(CACHE_NAME).then(cache => cache.put(event.request, response.clone()));
       return response;
     });
-    return cached || network;
-  }).catch(() => caches.match('./offline.html')));
+    if (cached) {
+      network.catch(() => {});
+      return cached;
+    }
+    return network;
+  }).catch(() => new Response('', {status: 504, statusText: 'Offline'})));
 });

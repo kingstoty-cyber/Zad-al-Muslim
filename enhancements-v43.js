@@ -11,7 +11,7 @@
   function appData(){const data={};Object.keys(localStorage).filter(k=>APP_KEY.test(k)).sort().forEach(k=>data[k]=localStorage.getItem(k));return data}
 
   function exportData(){
-    const payload={app:'زاد المسلم',version:'4.3',exportedAt:new Date().toISOString(),data:appData()};
+    const payload={app:'زاد المسلم',version:'4.4.1',exportedAt:new Date().toISOString(),data:appData()};
     const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});const a=document.createElement('a');
     a.href=URL.createObjectURL(blob);a.download=`zad-al-muslim-backup-${new Date().toISOString().slice(0,10)}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
   }
@@ -50,7 +50,7 @@
   }
   function disablePrayerAlerts(){const s=alertSettings();s.enabled=false;localStorage.setItem(ALERT_KEY,JSON.stringify(s));renderSettingsV43()}
   function checkPrayerAlert(){
-    const s=alertSettings();if(!s.enabled||Notification.permission!=='granted')return;const now=new Date();
+    const s=alertSettings();if(!s.enabled||!('Notification'in window)||Notification.permission!=='granted')return;const now=new Date();
     (typeof PrayerTimes!=='undefined'?PrayerTimes:[]).filter(p=>p.name!=='الشروق'&&/^\d\d:\d\d$/.test(p.time)).forEach(p=>{const[h,m]=p.time.split(':').map(Number);const at=new Date();at.setHours(h,m,0,0);const diff=Math.floor((at-now)/60000);const key=`zad_alert_${at.toDateString()}_${p.name}_${s.minutes}`;
       if(diff>=0&&diff<=s.minutes&&!sessionStorage.getItem(key)){const remaining=diff<1?'أقل من دقيقة':`${diff} ${diff===1?'دقيقة':'دقائق'}`;new Notification(`اقتربت صلاة ${p.name}`,{body:`باقي نحو ${remaining} — زاد المسلم`,icon:'icons/icon-192.png',tag:key});sessionStorage.setItem(key,'1')}});
   }

@@ -20,6 +20,7 @@
     let compassTimeout = null;
 
     function safeJSON(key) { try { return JSON.parse(localStorage.getItem(key) || 'null'); } catch (_) { return null; } }
+    function escapeHTML(value) { return String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char])); }
     function settings() {
         const saved = safeJSON(SETTINGS_KEY) || {};
         return { ...DEFAULTS, ...saved, offsets: { ...DEFAULTS.offsets, ...(saved.offsets || {}) } };
@@ -36,7 +37,7 @@
     }
     function locationLabel(loc) {
         if (!loc) return 'الموقع غير محدد';
-        const name = loc.city ? `${loc.city}${loc.country ? '، ' + loc.country : ''}` : `${Number(loc.lat).toFixed(4)}، ${Number(loc.lon).toFixed(4)}`;
+        const name = loc.city ? `${escapeHTML(loc.city)}${loc.country ? '، ' + escapeHTML(loc.country) : ''}` : `${Number(loc.lat).toFixed(4)}، ${Number(loc.lon).toFixed(4)}`;
         const source = loc.source === 'manual' ? 'يدوي' : loc.source === 'gps' ? 'GPS' : 'تقريبي عبر الشبكة';
         return `${name} — ${source}`;
     }
@@ -80,14 +81,16 @@
         applyTimes(times); return entry;
     }
     async function updatePrayerTimesV42(force = false) {
+        let loc = currentLocation();
         try {
-            let loc = currentLocation();
             if (!loc) loc = await gpsLocation();
             await fetchTimes(loc, force); if (AppState.currentTab === 'home') renderHomeV42(); return true;
         }
         catch (error) {
             const cached = safeJSON(CACHE_KEY);
-            if (cached?.times) { cached.stale = true; applyTimes(cached.times); if (AppState.currentTab === 'home') renderHomeV42(); }
+            const samePlace = !loc || (Math.abs(Number(cached?.lat) - Number(loc.lat)) < .02 && Math.abs(Number(cached?.lon) - Number(loc.lon)) < .02);
+            if (cached?.times && samePlace) { cached.stale = true; applyTimes(cached.times); if (AppState.currentTab === 'home') renderHomeV42(); }
+            else if (loc) PrayerTimes = prayerMap.map(([name]) => ({ name, time: '--:--' }));
             throw error;
         }
     }
@@ -100,6 +103,10 @@
     function prayerStatus() {
         const cache = safeJSON(CACHE_KEY);
         if (!cache) return { text: 'لم تُحمّل مواقيت موثوقة بعد', cls: 'warning' };
+        const loc = currentLocation();
+        if (loc && (Math.abs(Number(cache.lat) - Number(loc.lat)) >= .02 || Math.abs(Number(cache.lon) - Number(loc.lon)) >= .02)) {
+            return { text: 'المواقيت المحفوظة تخص موقعًا آخر — يلزم تحديث ناجح', cls: 'warning' };
+        }
         const stale = cache.date !== todayKey() || cache.stale;
         return { text: stale ? `آخر مواقيت محفوظة — ${new Date(cache.fetchedAt).toLocaleString('ar')}` : `محدّثة اليوم عبر AlAdhan${cache.timezone ? ' — ' + cache.timezone : ''}`, cls: stale ? 'warning' : 'ok' };
     }
@@ -212,7 +219,9 @@
     window.renderHome = renderHomeV42; window.renderSettings = renderSettingsV42; window.updatePrayerTimes = updatePrayerTimesV42;
     window.updatePrayerTimesWithFeedback = updateWithFeedback; window.renderQibla = renderQibla; window.startQiblaCompass = startCompass; window.savePrayerSettings = savePrayerSettingsUI;
     const initialCache = safeJSON(CACHE_KEY);
-    if (initialCache?.times) applyTimes(initialCache.times);
+    const initialLocation = currentLocation();
+    const initialMatches = !initialLocation || (Math.abs(Number(initialCache?.lat) - Number(initialLocation.lat)) < .02 && Math.abs(Number(initialCache?.lon) - Number(initialLocation.lon)) < .02);
+    if (initialCache?.times && initialMatches) applyTimes(initialCache.times);
     else {
         localStorage.removeItem('cached_prayer_times');
         PrayerTimes = prayerMap.map(([name]) => ({ name, time: '--:--' }));
