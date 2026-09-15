@@ -1,4 +1,4 @@
-/* زاد المسلم v4.6.0 — مكتبة القراء والتكرار المتقدم
+/* زاد المسلم — مكتبة القراء والتكرار المتقدم
  * مصدر الملفات: EveryAyah.com. لا تُضمَّن ملفات صوتية داخل التطبيق.
  */
 (function () {
@@ -74,7 +74,7 @@
         if (audio) return audio;
         audio = new Audio();
         audio.preload = 'metadata';
-        audio.addEventListener('play', updateControls);
+        audio.addEventListener('play', () => { window.stopSurahAudio?.(); updateControls(); followCurrentAyah(); });
         audio.addEventListener('pause', updateControls);
         audio.addEventListener('timeupdate', onTimeUpdate);
         audio.addEventListener('loadedmetadata', updateProgress);
@@ -148,6 +148,7 @@
     function clamp(value, min, max) { return Math.max(min, Math.min(max, Number(value) || min)); }
 
     async function playAyah(surah, ayah, asSurah = false, restoreSeconds = 0) {
+        window.stopSurahAudio?.();
         if (!context || context.surahId !== surah) {
             window.openSurah(surah, ayah);
             setTimeout(() => playAyah(surah, ayah, asSurah, restoreSeconds), 50);
@@ -163,6 +164,7 @@
         rememberReciter(settings.reciter);
         try {
             await player.play();
+            followCurrentAyah();
             setMediaSession();
         } catch (error) {
             showStatus(navigator.onLine ? 'تعذر تشغيل الملف. جرّب قارئًا آخر.' : 'هذه الآية غير محفوظة، اتصل بالإنترنت أولًا.', true);
@@ -234,8 +236,15 @@
         document.querySelectorAll('.ayah.audio-current').forEach(node => node.classList.remove('audio-current'));
         const target = document.getElementById(`ayah-${state.surah}-${state.ayah}`);
         target?.classList.add('audio-current');
-        if (audio && !audio.paused) target?.scrollIntoView({block: 'center', behavior: 'smooth'});
         window.saveReadingPosition?.(state.surah, state.ayah);
+    }
+
+    function followCurrentAyah() {
+        updateAyahHighlight();
+        const target = document.getElementById(`ayah-${state.surah}-${state.ayah}`);
+        if (!target) return;
+        const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+        target.scrollIntoView({block: 'center', behavior: reduceMotion ? 'auto' : 'smooth'});
     }
 
     function stopAudio() {

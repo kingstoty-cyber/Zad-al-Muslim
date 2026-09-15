@@ -10,7 +10,7 @@
         3: 'رابطة العالم الإسلامي', 5: 'الهيئة المصرية العامة للمساحة',
         4: 'جامعة أم القرى – مكة', 18: 'تونس', 19: 'الجزائر', 21: 'المغرب'
     };
-    const DEFAULTS = { method: 3, school: 0, offsets: { fajr: 0, sunrise: 0, dhuhr: 0, asr: 0, maghrib: 0, isha: 0 } };
+    const DEFAULTS = { method: 3, school: 0, timeFormat: '24', offsets: { fajr: 0, sunrise: 0, dhuhr: 0, asr: 0, maghrib: 0, isha: 0 } };
     const prayerMap = [
         ['الفجر', 'fajr'], ['الشروق', 'sunrise'], ['الظهر', 'dhuhr'],
         ['العصر', 'asr'], ['المغرب', 'maghrib'], ['العشاء', 'isha']
@@ -27,6 +27,12 @@
     }
     function saveSettings(next) { localStorage.setItem(SETTINGS_KEY, JSON.stringify(next)); }
     function cleanTime(value) { return String(value || '').match(/\d{1,2}:\d{2}/)?.[0]?.padStart(5, '0') || '--:--'; }
+    function displayTime(value) {
+        const raw = cleanTime(value);
+        if (raw === '--:--' || settings().timeFormat !== '12') return raw;
+        const [hour, minute] = raw.split(':').map(Number);
+        return `${hour % 12 || 12}:${String(minute).padStart(2, '0')} ${hour < 12 ? 'ص' : 'م'}`;
+    }
     function todayKey() {
         const d = new Date();
         return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
@@ -119,7 +125,7 @@
         const el = document.getElementById('next-prayer-countdown'); const name = document.getElementById('next-prayer-name'); const next = nextPrayer();
         if (!el || !next) return; const diff = Math.max(0, next.at - new Date()); const sec = Math.floor(diff / 1000);
         el.textContent = `${String(Math.floor(sec / 3600)).padStart(2, '0')}:${String(Math.floor(sec % 3600 / 60)).padStart(2, '0')}:${String(sec % 60).padStart(2, '0')}`;
-        if (name) name.textContent = `${next.name} — ${next.time}`;
+        if (name) name.textContent = `${next.name} — ${displayTime(next.time)}`;
     }
     function renderHomeV42() {
         if (countdownTimer) clearInterval(countdownTimer);
@@ -128,10 +134,10 @@
         const loc = currentLocation(); const status = prayerStatus(); const next = nextPrayer(); const ayah = getRandomAyah(); const reminder = getRandomReminder();
         content.innerHTML = `
           <div class="card next-prayer-card"><div class="card-title"><i class="fas fa-hourglass-half"></i> الصلاة القادمة</div>
-            <div id="next-prayer-name" class="next-prayer-name">${next ? `${next.name} — ${next.time}` : 'حدد موقعك لتحميل المواقيت'}</div>
+            <div id="next-prayer-name" class="next-prayer-name">${next ? `${next.name} — ${displayTime(next.time)}` : 'حدد موقعك لتحميل المواقيت'}</div>
             <div id="next-prayer-countdown" class="countdown">--:--:--</div></div>
           <div class="card"><div class="card-title"><i class="fas fa-mosque"></i> مواقيت الصلاة الدقيقة</div>
-            <div class="prayer-times">${PrayerTimes.map(p => `<div class="prayer-time ${p.name === 'الشروق' ? 'sunrise' : ''}"><div class="name">${p.name}</div><div class="time">${p.time}</div></div>`).join('')}</div>
+            <div class="prayer-times">${PrayerTimes.map(p => `<div class="prayer-time ${p.name === 'الشروق' ? 'sunrise' : ''}"><div class="name">${p.name}</div><div class="time">${displayTime(p.time)}</div></div>`).join('')}</div>
             <div class="prayer-meta"><div><i class="fas fa-location-dot"></i> ${locationLabel(loc)}</div><div class="source-status ${status.cls}"><i class="fas fa-circle-check"></i> ${status.text}</div></div>
             <div class="prayer-actions"><button id="prayer-refresh" class="btn-primary" onclick="updatePrayerTimesWithFeedback()"><i class="fas fa-rotate"></i> تحديث دقيق</button><button class="btn-primary qibla-button" onclick="renderQibla()"><i class="fas fa-compass"></i> اتجاه القبلة</button></div>
             <p class="accuracy-note">قد تختلف المواقيت دقائق قليلة حسب اعتماد مسجدك المحلي؛ اختر طريقة الحساب المناسبة واضبط الفروق من الإعدادات.</p>
@@ -206,13 +212,14 @@
         const card=document.createElement('div'); card.className='card prayer-settings'; card.innerHTML=`<div class="card-title"><i class="fas fa-sliders"></i> إعدادات الصلاة الدقيقة</div>
           <label>طريقة الحساب<select id="calc-method">${Object.entries(METHODS).map(([id,n])=>`<option value="${id}" ${Number(s.method)===Number(id)?'selected':''}>${n}</option>`).join('')}</select></label>
           <label>مذهب العصر<select id="asr-school"><option value="0" ${Number(s.school)===0?'selected':''}>الشافعي / المالكي / الحنبلي</option><option value="1" ${Number(s.school)===1?'selected':''}>الحنفي</option></select></label>
+          <label>تنسيق الوقت<select id="prayer-time-format"><option value="24" ${s.timeFormat==='24'?'selected':''}>24 ساعة — 17:30</option><option value="12" ${s.timeFormat==='12'?'selected':''}>12 ساعة — 5:30 م</option></select></label>
           <div class="offset-grid">${prayerMap.map(([n,k])=>`<label>${n}<input type="number" id="offset-${k}" min="-30" max="30" value="${s.offsets[k]||0}"><small>دقيقة</small></label>`).join('')}</div>
           <button class="btn-primary" onclick="savePrayerSettings()"><i class="fas fa-floppy-disk"></i> حفظ وتحديث المواقيت</button><p class="accuracy-note">اضبط الفروق فقط بعد مقارنة مواقيت التطبيق بجدول المسجد أو الجهة المعتمدة في مدينتك.</p>`;
         content.insertBefore(card, first?.nextSibling || first);
         content.querySelectorAll('p').forEach(p=>{if(p.textContent.includes('الإصدار 4.1'))p.innerHTML=p.innerHTML.replace('الإصدار 4.1','الإصدار 4.2');});
     }
     async function savePrayerSettingsUI() {
-        const old=settings(), next={method:Number(document.getElementById('calc-method').value),school:Number(document.getElementById('asr-school').value),offsets:{}};
+        const old=settings(), next={method:Number(document.getElementById('calc-method').value),school:Number(document.getElementById('asr-school').value),timeFormat:document.getElementById('prayer-time-format')?.value==='12'?'12':'24',offsets:{}};
         prayerMap.forEach(([,k])=>next.offsets[k]=Math.max(-30,Math.min(30,Number(document.getElementById(`offset-${k}`).value)||0)));
         saveSettings(next); try { await updatePrayerTimesV42(true); alert('تم حفظ الإعدادات وتحديث المواقيت.'); } catch(e) { saveSettings(old); alert(`تعذر التحديث: ${e.message}\nأعيدت الإعدادات السابقة.`); } renderSettingsV42();
     }

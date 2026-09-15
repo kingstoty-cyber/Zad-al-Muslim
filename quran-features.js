@@ -21,8 +21,8 @@
   function renderQuranV44(filter=''){return renderQuranHomeV44(filter)}
   function filterSurahsV44(value){renderQuranHomeV44(value);document.getElementById('surah-search')?.focus()}
   async function renderQuranHomeV44(filter=''){
-    if(filter)baseHome(filter);else await baseRenderQuran();try{await loadMeta();const tools=document.querySelector('.quran-tools');if(!tools||document.getElementById('quran-v44-tools'))return;
-      tools.insertAdjacentHTML('afterend',`<section id="quran-v44-tools" class="quran-v44-tools"><button onclick="renderQuranIndexes('juz')"><i class="fas fa-table-list"></i><span>الأجزاء والأحزاب</span></button><button onclick="renderWirdPlanner()"><i class="fas fa-calendar-check"></i><span>الورد والختمة</span></button><button onclick="showAyahJump()"><i class="fas fa-arrow-turn-down"></i><span>الانتقال لآية</span></button></section>${wirdSummaryMarkup()}`);
+    if(filter)baseHome(filter);else await baseRenderQuran();try{await loadMeta();const tools=document.querySelector('.quran-tools');if(!tools||document.getElementById('quran-feature-tools'))return;
+      tools.insertAdjacentHTML('afterend',`<section id="quran-feature-tools" class="quran-feature-tools"><button onclick="renderQuranIndexes('juz')"><i class="fas fa-table-list"></i><span>الأجزاء والأحزاب</span></button><button onclick="renderWirdPlanner()"><i class="fas fa-calendar-check"></i><span>الورد والختمة</span></button><button onclick="showAyahJump()"><i class="fas fa-arrow-turn-down"></i><span>الانتقال لآية</span></button></section>${wirdSummaryMarkup()}`);
     }catch(e){console.error(e)}}
 
   function indexTabs(active){return `<div class="index-tabs">${[['juz','الأجزاء'],['hizb','الأحزاب'],['rub','الأرباع'],['pages','الصفحات'],['sajdahs','السجدات']].map(([k,n])=>`<button class="${active===k?'active':''}" onclick="renderQuranIndexes('${k}')">${n}</button>`).join('')}</div>`}

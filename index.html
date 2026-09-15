@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تطبيق زاد المسلم v4.6.1</title>
+    <title>تطبيق زاد المسلم v4.6.2</title>
     <meta name="theme-color" content="#0f5132">
     <meta name="description" content="زاد المسلم: القرآن الكريم والأذكار والمسبحة ومتابعة العبادات">
     <link rel="manifest" href="manifest.webmanifest">
@@ -15,6 +15,15 @@
     
     <!-- ملفات التطبيق -->
     <link rel="stylesheet" href="styles.css">
+    <script defer src="config.js"></script>
+    <script defer src="data.js"></script>
+    <script defer src="app.js"></script>
+    <script defer src="quran.js"></script>
+    <script defer src="prayer.js"></script>
+    <script defer src="enhancements.js"></script>
+    <script defer src="quran-features.js"></script>
+    <script defer src="quran-audio.js"></script>
+    <script defer src="surah-audio.js"></script>
 </head>
 <body id="app-body">
 
@@ -89,101 +98,6 @@
         </div>
     </div>
 
-    <!-- ملفات JavaScript -->
-    <script src="data.js"></script>
-    <script src="app.js"></script>
-    <script src="quran.js"></script>
-    <script src="prayer-v42.js"></script>
-    <script src="enhancements-v43.js"></script>
-    <script src="quran-v44.js"></script>
-    <script src="quran-audio-v46.js"></script>
-    <script src="quran-surah-audio-v461.js"></script>
-
-    <!-- ربط واجهة الإدخال اليدوي بالأحداث (تعتمد على الدوال الموجودة في app.js) -->
-    <script>
-      (function(){
-        const toggleBtn = document.getElementById('manual-toggle');
-        const panel = document.getElementById('manual-location-panel');
-        const closeBtn = document.getElementById('manual-close');
-        const saveBtn = document.getElementById('save-manual-btn');
-        const clearBtn = document.getElementById('clear-manual-btn');
-        const latInput = document.getElementById('manual-lat');
-        const lonInput = document.getElementById('manual-lon');
-        const cityInput = document.getElementById('manual-city');
-
-        function openPanel() {
-          // ملء الحقول إن كان هناك موقع محفوظ
-          if (typeof getManualLocation === 'function') {
-            const m = getManualLocation();
-            if (m) {
-              latInput.value = m.lat;
-              lonInput.value = m.lon;
-              cityInput.value = m.city || '';
-            } else {
-              latInput.value = '';
-              lonInput.value = '';
-              cityInput.value = '';
-            }
-          }
-          panel.style.display = 'block';
-        }
-        function closePanel(){ panel.style.display = 'none'; }
-
-        toggleBtn && toggleBtn.addEventListener('click', openPanel);
-        closeBtn && closeBtn.addEventListener('click', closePanel);
-
-        saveBtn && saveBtn.addEventListener('click', async () => {
-          const lat = parseFloat(latInput.value);
-          const lon = parseFloat(lonInput.value);
-          const city = cityInput.value.trim();
-
-          if (Number.isNaN(lat) || Number.isNaN(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) {
-            alert('أدخل خط عرض بين -90 و90، وخط طول بين -180 و180.');
-            return;
-          }
-
-          if (typeof saveManualLocation === 'function') {
-            saveManualLocation(lat, lon, city);
-          } else {
-            localStorage.setItem('manual_location', JSON.stringify({lat, lon, city, source:'manual', timestamp: Date.now()}));
-          }
-
-          // اجبر تحديث المواقيت الآن
-          if (typeof updatePrayerTimesWithFeedback === 'function') {
-            await updatePrayerTimesWithFeedback();
-          } else if (typeof updatePrayerTimes === 'function') {
-            await updatePrayerTimes();
-          }
-
-          closePanel();
-          // إعادة تحميل الصفحة الرئيسية لعرض التغيير إن لزم
-          if (typeof renderHome === 'function') renderHome();
-        });
-
-        clearBtn && clearBtn.addEventListener('click', () => {
-          if (!confirm('هل تريد إزالة الموقع اليدوي؟')) return;
-          if (typeof clearManualLocation === 'function') {
-            clearManualLocation();
-          } else {
-            localStorage.removeItem('manual_location');
-          }
-          // مسح الكاش حتى يعيد التحميل لاحقاً
-          localStorage.removeItem('cached_prayer_times');
-          localStorage.removeItem('zad_prayer_v42_cache');
-          alert('تمت إزالة الموقع اليدوي. سيُطلب GPS عند التحديث التالي، ولن تُعرض أوقات محلية تخمينية.');
-          closePanel();
-          if (typeof renderHome === 'function') renderHome();
-        });
-
-        // إغلاق عند الضغط خارج اللوحة
-        window.addEventListener('click', (e) => {
-          if (!panel.contains(e.target) && !toggleBtn.contains(e.target)) {
-            // لا تغلق إذا كانت مخفية
-            if (panel.style.display === 'block') panel.style.display = 'none';
-          }
-        });
-      })();
-    </script>
     <script>
       if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
         window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(console.warn));

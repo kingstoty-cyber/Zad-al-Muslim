@@ -34,6 +34,8 @@ function getManualLocation() {
 
 function clearManualLocation() {
     localStorage.removeItem('manual_location');
+    localStorage.removeItem('cached_prayer_times');
+    localStorage.removeItem('zad_prayer_v42_cache');
     try {
         const saved = JSON.parse(localStorage.getItem('user_location') || 'null');
         if (saved?.source === 'manual') localStorage.removeItem('user_location');
@@ -41,6 +43,54 @@ function clearManualLocation() {
         localStorage.removeItem('user_location');
     }
     console.log('تم إزالة الموقع اليدوي');
+}
+
+function setupManualLocationPanel() {
+    const toggleBtn = document.getElementById('manual-toggle');
+    const panel = document.getElementById('manual-location-panel');
+    const closeBtn = document.getElementById('manual-close');
+    const saveBtn = document.getElementById('save-manual-btn');
+    const clearBtn = document.getElementById('clear-manual-btn');
+    const latInput = document.getElementById('manual-lat');
+    const lonInput = document.getElementById('manual-lon');
+    const cityInput = document.getElementById('manual-city');
+    if (!toggleBtn || !panel || !saveBtn || !clearBtn || !latInput || !lonInput || !cityInput) return;
+
+    const closePanel = () => { panel.style.display = 'none'; };
+    toggleBtn.addEventListener('click', () => {
+        const saved = getManualLocation();
+        latInput.value = saved?.lat ?? '';
+        lonInput.value = saved?.lon ?? '';
+        cityInput.value = saved?.city ?? '';
+        panel.style.display = 'block';
+    });
+    closeBtn?.addEventListener('click', closePanel);
+    saveBtn.addEventListener('click', async () => {
+        const lat = Number.parseFloat(latInput.value);
+        const lon = Number.parseFloat(lonInput.value);
+        if (!Number.isFinite(lat) || !Number.isFinite(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+            alert('أدخل خط عرض بين -90 و90، وخط طول بين -180 و180.');
+            return;
+        }
+        saveManualLocation(lat, lon, cityInput.value.trim());
+        try {
+            if (typeof window.updatePrayerTimesWithFeedback === 'function') await window.updatePrayerTimesWithFeedback();
+            else if (typeof window.updatePrayerTimes === 'function') await window.updatePrayerTimes();
+        } finally {
+            closePanel();
+            window.renderHome?.();
+        }
+    });
+    clearBtn.addEventListener('click', () => {
+        if (!confirm('هل تريد إزالة الموقع اليدوي؟')) return;
+        clearManualLocation();
+        alert('تمت إزالة الموقع اليدوي. سيُطلب GPS عند التحديث التالي، ولن تُعرض أوقات محلية تخمينية.');
+        closePanel();
+        window.renderHome?.();
+    });
+    window.addEventListener('click', event => {
+        if (panel.style.display === 'block' && !panel.contains(event.target) && !toggleBtn.contains(event.target)) closePanel();
+    });
 }
 
 // تحميل الكاش اليومي
@@ -1385,7 +1435,7 @@ function renderSettings() {
 
         <div class="card">
             <div class="card-title"><i class="fas fa-circle-info"></i> حول التطبيق</div>
-            <p>تطبيق <span style="color: var(--primary-color)">زاد المسلم</span> - الإصدار 4.6.1</p>
+            <p>تطبيق <span style="color: var(--primary-color)">زاد المسلم</span> - الإصدار ${window.ZAD_APP?.version || '4.6.2'}</p>
             <p style="font-size: 0.9rem; line-height: 1.6;">
                 تطبيق متكامل لمتابعة العبادات اليومية، الأذكار، وقراءة القرآن الكريم.<br>
                 يعمل دون اتصال في القرآن والأذكار بعد التحميل الأول ويحفظ تقدمك محلياً.<br>
@@ -1596,3 +1646,4 @@ window.saveManualLocation = saveManualLocation;
 window.getManualLocation = getManualLocation;
 window.clearManualLocation = clearManualLocation;
 window.needsUpdateForManualLocation = needsUpdateForManualLocation;
+setupManualLocationPanel();
