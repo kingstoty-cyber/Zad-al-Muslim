@@ -1,0 +1,26 @@
+{
+  "id": "./",
+  "name": "زاد المسلم v4.8.1",
+  "short_name": "زاد المسلم",
+  "description": "القرآن الكريم والأذكار والمسبحة ومتابعة العبادات",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "any",
+  "categories": ["books", "education", "lifestyle"],
+  "prefer_related_applications": false,
+  "background_color": "#07130e",
+  "theme_color": "#0f5132",
+  "shortcuts": [
+    {"name":"القرآن الكريم","short_name":"القرآن","url":"./#quran","icons":[{"src":"icons/icon-192.png","sizes":"192x192"}]},
+    {"name":"القرآن المسموع","short_name":"المسموع","url":"./#audio-quran","icons":[{"src":"icons/icon-192.png","sizes":"192x192"}]},
+    {"name":"الإعدادات","short_name":"الإعدادات","url":"./#settings","icons":[{"src":"icons/icon-192.png","sizes":"192x192"}]}
+  ],
+  "icons": [
+    {"src":"icons/icon-192.png","sizes":"192x192","type":"image/png","purpose":"any maskable"},
+    {"src":"icons/icon-512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}
+  ]
+}

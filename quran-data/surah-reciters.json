@@ -1,0 +1,19 @@
+{
+  "version":"4.8.0",
+  "source_note":"Whole-surah public MP3 links. Quran text is not changed or synchronized with non-Hafs recordings.",
+  "reciters":[
+    {"id":"ly-qariou-qalun","name":"عبد الحميد القريو","country":"ليبيا","group":"libya","riwaya":"قالون عن نافع — طريق أبي نشيط","style":"مرتل","server":"https://quranupload.server.ly/grew/","source":"Qaloun.app","surahs":114},
+    {"id":"ly-dokali-qalun","name":"الدوكالي محمد العالم","country":"ليبيا","group":"libya","riwaya":"قالون عن نافع","style":"مرتل","server":"https://server7.mp3quran.net/dokali/","source":"MP3Quran","surahs":114},
+    {"id":"ly-waleed-qalun","name":"وليد النائحي","country":"ليبيا","group":"libya","riwaya":"قالون عن نافع — طريق أبي نشيط","style":"مرتل","server":"https://server9.mp3quran.net/waleed/","source":"MP3Quran","surahs":114},
+    {"id":"ly-tareq-qalun","name":"طارق عبدالغني دعوب","country":"ليبيا","group":"libya","riwaya":"قالون عن نافع","style":"مرتل","server":"https://server10.mp3quran.net/tareq/","source":"MP3Quran","surahs":114},
+    {"id":"ly-sneineh-qalun","name":"محمد أبو سنينة","country":"ليبيا","group":"libya","riwaya":"قالون عن نافع","style":"مرتل","server":"https://server16.mp3quran.net/sneineh/Rewayat-Qalon-A-n-Nafi/","source":"MP3Quran","surahs":114},
+    {"id":"ly-qeniwa-qalun","name":"محمد الأمين قنيوة","country":"ليبيا","group":"libya","riwaya":"قالون عن نافع","style":"مرتل","server":"https://server16.mp3quran.net/qeniwa/Rewayat-Qalon-A-n-Nafi/","source":"MP3Quran","surahs":114},
+    {"id":"ly-sultani-hafs","name":"مفتاح السلطني","country":"ليبيا","group":"libya","riwaya":"حفص عن عاصم","style":"مرتل","server":"https://server14.mp3quran.net/muftah_sultany/Rewayat-Hafs-A-n-Assem/","source":"MP3Quran","surahs":114},
+    {"id":"ly-sultani-ibn-thakwan","name":"مفتاح السلطني","country":"ليبيا","group":"libya","riwaya":"ابن ذكوان عن ابن عامر","style":"مرتل","server":"https://server14.mp3quran.net/muftah_sultany/Rewayat_Ibn-Thakwan-A-n-Ibn-Amer/","source":"MP3Quran","surahs":114},
+    {"id":"ly-sultani-duri-kisai","name":"مفتاح السلطني","country":"ليبيا","group":"libya","riwaya":"الدوري عن الكسائي","style":"مرتل","server":"https://server14.mp3quran.net/muftah_sultany/Rewayat-AlDorai-A-n-Al-Kisa-ai/","source":"MP3Quran","surahs":114},
+    {"id":"ly-sultani-duri-amr","name":"مفتاح السلطني","country":"ليبيا","group":"libya","riwaya":"الدوري عن أبي عمرو","style":"مرتل","server":"https://server14.mp3quran.net/muftah_sultany/Rewayat-Aldori-A-n-Abi-Amr/","source":"MP3Quran","surahs":114},
+    {"id":"sa-luhaidan-hafs","name":"محمد اللحيدان","country":"السعودية","group":"requested","riwaya":"حفص عن عاصم","style":"مرتل","server":"https://server8.mp3quran.net/lhdan/","source":"MP3Quran","surahs":114},
+    {"id":"sa-dosari-hafs","name":"ياسر الدوسري","country":"السعودية","group":"requested","riwaya":"حفص عن عاصم","style":"مرتل","server":"https://server11.mp3quran.net/yasser/","source":"MP3Quran","surahs":114},
+    {"id":"sa-badr-hafs","name":"بدر التركي","country":"السعودية","group":"requested","riwaya":"حفص عن عاصم","style":"مرتل","server":"https://server10.mp3quran.net/bader/Rewayat-Hafs-A-n-Assem/","source":"MP3Quran","surahs":114}
+  ]
+}

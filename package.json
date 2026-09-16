@@ -1,0 +1,17 @@
+{
+  "name": "zad-al-muslim",
+  "version": "4.8.1",
+  "private": true,
+  "description": "زاد المسلم — حزمة الويب وتجهيز Android عبر Capacitor",
+  "scripts": {
+    "prepare:web": "node scripts/prepare-capacitor.mjs",
+    "android:add": "npm run prepare:web && npx cap add android",
+    "android:sync": "npm run prepare:web && npx cap sync android",
+    "android:open": "npx cap open android"
+  },
+  "devDependencies": {
+    "@capacitor/android": "^7.4.0",
+    "@capacitor/cli": "^7.4.0",
+    "@capacitor/core": "^7.4.0"
+  }
+}

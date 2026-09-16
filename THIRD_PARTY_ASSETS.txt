@@ -1,0 +1,34 @@
+Third-party UI assets bundled for offline use
+
+Font Awesome Free 6.4.0
+Copyright Fonticons, Inc.
+Icons: CC BY 4.0; Fonts: SIL OFL 1.1; Code: MIT License.
+https://fontawesome.com/license/free
+
+Amiri font
+Copyright Khaled Hosny and contributors.
+SIL Open Font License 1.1.
+https://github.com/aliftype/amiri
+
+Tajawal font
+Copyright Boutros Fonts and contributors.
+SIL Open Font License 1.1.
+https://github.com/Gue3bara/Tajawal
+
+Quran navigation metadata generated with quran-meta 6.0.17 (Hafs)
+Copyright quran-center contributors.
+MIT License.
+https://github.com/quran-center/quran-meta
+
+Quran recitation audio (streamed/downloaded by the user; not bundled)
+EveryAyah Quran Files
+https://everyayah.com/recitations_ayat.html
+The application links to public audio files and does not redistribute audio bytes in the project ZIP.
+The upstream site does not publish a clear standalone licence page; reciter rights remain with their owners.
+
+Whole-surah recitation catalogue and files
+MP3Quran API and servers — https://mp3quran.net/api/v3/reciters?language=ar
+Qaloun.app / Libyan upload server (Abdul Hamid Al-Qariou) — https://qaloun.app/
+
+Official Libyan Qalun Mushaf (external link; pages are not bundled)
+Libyan General Authority of Awqaf — https://mushaf.awqaf.gov.ly/
