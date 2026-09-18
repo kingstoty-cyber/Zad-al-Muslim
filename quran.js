@@ -104,7 +104,7 @@
                     </article>`;
                 }).join('') || '<div class="quran-empty">لا توجد سورة مطابقة.</div>'}
             </div>
-            <p class="quran-attribution">النص القرآني من مشروع Tanzil، نُقل دون تغيير. الإصدار v${window.ZAD_APP?.version || '4.8.1'}</p>`;
+            <p class="quran-attribution">النص القرآني من مشروع Tanzil، نُقل دون تغيير. الإصدار v${window.ZAD_APP?.version || '4.8.2'}</p>`;
     }
 
     function openSurah(surahId, ayahNumber = 1) {

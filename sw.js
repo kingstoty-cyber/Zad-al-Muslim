@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zad-al-muslim-v4-8-1';
+const CACHE_NAME = 'zad-al-muslim-v4-8-2';
 const AUDIO_CACHE = 'zad-quran-audio-v45';
 const SURAH_AUDIO_CACHE = 'zad-quran-surah-audio-v461';
 const APP_ASSETS = [
@@ -18,7 +18,7 @@ self.addEventListener('activate', event => {
 });
 self.addEventListener('message', event => {
   if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
-  if (event.data && event.data.type === 'GET_VERSION') event.source?.postMessage({type:'APP_VERSION',version:'4.8.1'});
+  if (event.data && event.data.type === 'GET_VERSION') event.source?.postMessage({type:'APP_VERSION',version:'4.8.2'});
 });
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;

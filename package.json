@@ -1,6 +1,6 @@
 {
   "name": "zad-al-muslim",
-  "version": "4.8.1",
+  "version": "4.8.2",
   "private": true,
   "description": "زاد المسلم — حزمة الويب وتجهيز Android عبر Capacitor",
   "scripts": {

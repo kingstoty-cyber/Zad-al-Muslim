@@ -1,2 +1,2 @@
 /* الإعدادات العامة لزاد المسلم — غيّر رقم الإصدار هنا عند إنشاء إصدار جديد. */
-window.ZAD_APP = Object.freeze({ version: '4.8.1' });
+window.ZAD_APP = Object.freeze({ version: '4.8.2' });
