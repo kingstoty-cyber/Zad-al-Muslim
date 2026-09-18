@@ -1,4 +1,4 @@
-/* زاد المسلم v4.8.1 — وضع الحفظ، القوائم المحلية ومشاركة الآية كصورة. */
+/* زاد المسلم v4.8 — وضع الحفظ، القوائم المحلية ومشاركة الآية كصورة. */
 (function(){
   'use strict';
   const MODE='zad_memorization_mode',PLAYLISTS='zad_quran_playlists';
