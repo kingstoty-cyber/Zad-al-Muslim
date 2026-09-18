@@ -2,5 +2,9 @@
   "appId": "ly.zadalmuslim.app",
   "appName": "زاد المسلم",
   "webDir": "www",
-  "server": {"androidScheme": "https"}
+  "server": {"androidScheme": "https"},
+  "plugins": {
+    "SplashScreen": {"launchShowDuration": 1200, "backgroundColor": "#063b28", "showSpinner": false},
+    "LocalNotifications": {"smallIcon": "ic_stat_zad", "iconColor": "#0f8a5f"}
+  }
 }
