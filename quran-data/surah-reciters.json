@@ -1,5 +1,5 @@
 {
-  "version":"4.6.3",
+  "version":"4.8.1",
   "source_note":"Whole-surah public MP3 links. Quran text is not changed or synchronized with non-Hafs recordings.",
   "reciters":[
     {"id":"ly-qariou-qalun","name":"عبد الحميد القريو","country":"ليبيا","group":"libya","riwaya":"قالون عن نافع — طريق أبي نشيط","style":"مرتل","server":"https://quranupload.server.ly/grew/","source":"Qaloun.app","surahs":114},

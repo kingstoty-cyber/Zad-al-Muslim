@@ -27,14 +27,15 @@
     const ARABIC_NAMES = {
         'Abdul Basit Murattal':'عبد الباسط عبد الصمد — مرتل','Abdul Basit Mujawwad':'عبد الباسط عبد الصمد — مجود','Abdullah Basfar':'عبد الله بصفر','Abdurrahmaan As-Sudais':'عبد الرحمن السديس','AbdulSamad QuranExplorer.Com':'عبد الباسط عبد الصمد','Abu Bakr Ash-Shaatree':'أبو بكر الشاطري','Ahmed ibn Ali al-Ajamy QuranExplorer.Com':'أحمد العجمي','Ahmed ibn Ali al-Ajamy KetabAllah.Net':'أحمد العجمي','Alafasy':'مشاري راشد العفاسي','Ghamadi':'سعد الغامدي','Hani Rifai':'هاني الرفاعي','Husary':'محمود خليل الحصري','Husary Mujawwad':'محمود خليل الحصري — مجود','Hudhaify':'علي الحذيفي','Ibrahim Akhdar':'إبراهيم الأخضر','Maher Al Muaiqly':'ماهر المعيقلي','Menshawi':'محمد صديق المنشاوي','Minshawy Mujawwad':'محمد صديق المنشاوي — مجود','Minshawy Murattal':'محمد صديق المنشاوي — مرتل','Mohammad al Tablaway':'محمد محمود الطبلاوي','Muhammad Ayyoub':'محمد أيوب','Muhammad Jibreel':'محمد جبريل','Saood bin Ibraaheem Ash-Shuraym':'سعود الشريم','Parhizgar_64Kbps':'شهريار برهيزكار','Salaah AbdulRahman Bukhatir':'صلاح بوخاطر','Muhsin Al Qasim':'عبد المحسن القاسم','Abdullaah 3awwaad Al-Juhaynee':'عبد الله عواد الجهني','Salah Al Budair':'صلاح البدير','Abdullah Matroud':'عبد الله المطرود','Ahmed Neana':'أحمد نعينع','Muhammad AbdulKareem':'محمد عبد الكريم','Khalefa Al-Tunaiji':'خليفة الطنيجي','Mahmoud Ali Al-Banna':'محمود علي البنا','(Warsh) Ibrahim Al-Dosary':'إبراهيم الدوسري — ورش','(Warsh) Yassin Al-Jazaery':'ياسين الجزائري — ورش','Karim Mansoori (Iran)':'كريم منصوري','Husary (Muallim)':'الحصري — المصحف المعلم','Khalid Abdullah al-Qahtanee':'خالد القحطاني','Yasser_Ad-Dussary':'ياسر الدوسري','Nasser_Alqatami':'ناصر القطامي','Ali_Hajjaj_AlSuesy':'علي حجاج السويسي','Sahl_Yassin':'سهل ياسين','Ahmed Ibn Ali Al Ajamy':'أحمد العجمي','Aziz Alili':'عزيز عليلي','Yaser Salamah':'ياسر سلامة','Akram Al Alaqimy':'أكرم العلاقمي','Ali Jaber':'علي جابر','Fares Abbad':'فارس عباد','Ayman Sowaid':'أيمن سويد'
     };
-    const DEFAULTS = {reciter: RECITERS[0].id, repeat: 1, speed: 1};
+    const DEFAULTS = {reciter: RECITERS[0].id, repeat: 1, rangeRepeat: 1, silence: 0, speed: 1};
     let settings = readJson(KEYS.settings, DEFAULTS);
     let context = null;
     let audio = null;
-    let state = {surah: 0, ayah: 0, playingSurah: false, repetitions: 0, rangeStart: 1, rangeEnd: 0};
+    let state = {surah: 0, ayah: 0, playingSurah: false, repetitions: 0, rangeCycles: 0, rangeStart: 1, rangeEnd: 0};
     let saveTimer = 0;
     let downloadCancelled = false;
     let sleepTimer = 0;
+    let transitionTimer = 0;
     let recitersLoaded = false;
 
     async function loadReciters() {
@@ -106,8 +107,10 @@
             </div>
             <div class="audio-progress"><input id="audio-seek" type="range" min="0" max="1000" value="0" aria-label="موضع التلاوة"><output id="audio-time">00:00 / 00:00</output></div>
             <div class="audio-options">
-                <label>تكرار الآية<select id="audio-repeat"><option value="1">مرة</option><option value="2">مرتان</option><option value="3">3 مرات</option><option value="5">5 مرات</option><option value="-1">مستمر</option></select></label>
+                <label>تكرار الآية<select id="audio-repeat"><option value="1">مرة</option><option value="2">مرتان</option><option value="3">3 مرات</option><option value="5">5 مرات</option><option value="10">10 مرات</option><option value="20">20 مرة</option><option value="-1">مستمر</option></select></label>
                 <label>السرعة<select id="audio-speed"><option value="0.5">0.5×</option><option value="0.75">0.75×</option><option value="1">1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="1.75">1.75×</option><option value="2">2×</option></select></label>
+                <label>فاصل بين التكرارات<select id="audio-silence"><option value="0">بدون فاصل</option><option value="1">ثانية</option><option value="2">ثانيتان</option><option value="3">3 ثوانٍ</option><option value="5">5 ثوانٍ</option><option value="10">10 ثوانٍ</option></select></label>
+                <label>تكرار النطاق/السورة<select id="audio-range-repeat"><option value="1">مرة</option><option value="2">مرتان</option><option value="3">3 مرات</option><option value="5">5 مرات</option><option value="10">10 مرات</option><option value="-1">مستمر</option></select></label>
             </div>
             <div class="audio-range"><label>من الآية<input id="audio-range-start" type="number" min="1" max="${payload.verses.length}" value="${initialAyah}"></label><label>إلى الآية<input id="audio-range-end" type="number" min="1" max="${payload.verses.length}" value="${payload.verses.length}"></label><button type="button" onclick="playQuranRange()"><i class="fas fa-repeat"></i> تشغيل النطاق</button></div>
             <label class="audio-field">مؤقت الإيقاف<select id="audio-sleep"><option value="0">بدون مؤقت</option><option value="10">بعد 10 دقائق</option><option value="30">بعد 30 دقيقة</option><option value="60">بعد 60 دقيقة</option></select></label>
@@ -127,12 +130,18 @@
     function bindPlayerInputs() {
         const repeat = document.getElementById('audio-repeat');
         const speed = document.getElementById('audio-speed');
+        const silence = document.getElementById('audio-silence');
+        const rangeRepeat = document.getElementById('audio-range-repeat');
         repeat.value = String(settings.repeat);
         speed.value = String(settings.speed);
+        silence.value = String(settings.silence);
+        rangeRepeat.value = String(settings.rangeRepeat);
         document.getElementById('audio-reciter').addEventListener('change', event => {
             stopAudio(); settings.reciter = event.target.value; persistSettings(); updateDownloadState();
         });
         repeat.addEventListener('change', event => { settings.repeat = Number(event.target.value); persistSettings(); });
+        silence.addEventListener('change', event => { settings.silence = Number(event.target.value); persistSettings(); });
+        rangeRepeat.addEventListener('change', event => { settings.rangeRepeat = Number(event.target.value); persistSettings(); });
         speed.addEventListener('change', event => {
             settings.speed = Number(event.target.value); getAudio().playbackRate = settings.speed; persistSettings();
         });
@@ -180,12 +189,12 @@
         playAyah(context.surahId, state.ayah, false, seconds);
     }
 
-    function playSurah() { state.rangeStart = state.ayah || 1; state.rangeEnd = context.verses.length; playAyah(context.surahId, state.rangeStart, true); }
+    function playSurah() { state.rangeStart = state.ayah || 1; state.rangeEnd = context.verses.length; state.rangeCycles = 0; playAyah(context.surahId, state.rangeStart, true); }
     function playRange() {
         const max = context.verses.length;
         const start = clamp(document.getElementById('audio-range-start')?.value, 1, max);
         const end = clamp(document.getElementById('audio-range-end')?.value, start, max);
-        state.rangeStart = start; state.rangeEnd = end;
+        state.rangeStart = start; state.rangeEnd = end; state.rangeCycles = 0;
         playAyah(context.surahId, start, true);
     }
     function previous() { playAyah(state.surah, clamp(state.ayah - 1, 1, context.verses.length), state.playingSurah); }
@@ -193,15 +202,26 @@
 
     function onEnded() {
         if (settings.repeat === -1 || state.repetitions + 1 < settings.repeat) {
-            state.repetitions += 1; getAudio().currentTime = 0; getAudio().play().catch(onAudioError); return;
+            state.repetitions += 1; return afterSilence(() => { getAudio().currentTime = 0; getAudio().play().catch(onAudioError); });
         }
         state.repetitions = 0;
         if (state.playingSurah && state.ayah < (state.rangeEnd || context.verses.length)) playAyah(state.surah, state.ayah + 1, true);
+        else if (state.playingSurah && (settings.rangeRepeat === -1 || state.rangeCycles + 1 < settings.rangeRepeat)) {
+            state.rangeCycles += 1; afterSilence(() => playAyah(state.surah, state.rangeStart, true));
+        }
         else { state.playingSurah = false; updateControls(); showStatus('اكتملت التلاوة'); }
+    }
+
+    function afterSilence(action) {
+        clearTimeout(transitionTimer);
+        if (!settings.silence) return action();
+        showStatus(`فاصل ${settings.silence} ثوانٍ قبل التكرار…`);
+        transitionTimer = setTimeout(action, settings.silence * 1000);
     }
 
     function onTimeUpdate() {
         updateProgress();
+        updateControls();
         clearTimeout(saveTimer);
         saveTimer = setTimeout(() => writeJson(KEYS.last, {surah: state.surah, ayah: state.ayah, seconds: getAudio().currentTime, reciter: settings.reciter, updatedAt: Date.now()}), 500);
     }
@@ -225,6 +245,12 @@
         const button = document.getElementById('audio-play');
         if (button) { button.innerHTML = `<i class="fas fa-${playing ? 'pause' : 'play'}"></i>`; button.setAttribute('aria-label', playing ? 'إيقاف مؤقت' : 'تشغيل'); }
         document.getElementById('audio-surah-play')?.classList.toggle('active', Boolean(state.playingSurah));
+        window.dispatchEvent(new CustomEvent('zad:audio-state', {detail: {
+            kind: 'ayah', playing: Boolean(playing), currentTime: audio?.currentTime || 0,
+            duration: Number.isFinite(audio?.duration) ? audio.duration : 0,
+            title: context ? `سورة ${context.chapter.name} — الآية ${state.ayah}` : 'تلاوة الآيات',
+            subtitle: RECITERS.find(item => item.id === settings.reciter)?.name || 'القرآن الكريم'
+        }}));
     }
 
     function updateNow() {
@@ -249,6 +275,7 @@
 
     function stopAudio() {
         if (!audio) return;
+        clearTimeout(transitionTimer);
         audio.pause(); audio.removeAttribute('src'); audio.load(); state.playingSurah = false; updateControls();
     }
 
@@ -420,7 +447,7 @@
     function audioSettingsMarkup() {
         const items = Object.values(downloads().items);
         const reciterCount = new Set(items.map(item => item.reciter)).size;
-        return `<div id="audio-settings-card" class="card audio-settings-card"><div class="card-title"><i class="fas fa-headphones"></i> التلاوات المحفوظة</div><p>السور المنزلة: <strong>${items.length}</strong> • القراء: <strong>${reciterCount}</strong></p><small>ملفات الصوت تبقى على هذا الجهاز ولا تدخل في ملف النسخة الاحتياطية بسبب حجمها.</small><button class="btn-primary danger-btn" onclick="clearAllQuranAudio()" ${items.length ? '' : 'disabled'}><i class="fas fa-trash"></i> حذف جميع التلاوات المنزلة</button></div>`;
+        return `<div id="audio-settings-card" class="card audio-settings-card"><div class="card-title"><i class="fas fa-headphones"></i> التلاوات المحفوظة</div><p>السور المنزلة: <strong>${items.length}</strong> • القراء: <strong>${reciterCount}</strong></p><small>ملفات الصوت تبقى على هذا الجهاز ولا تدخل في ملف النسخة الاحتياطية بسبب حجمها.</small><button class="btn-primary" onclick="renderAudioDownloads()"><i class="fas fa-list"></i> إدارة كل التنزيلات</button><button class="btn-primary danger-btn" onclick="clearAllQuranAudio()" ${items.length ? '' : 'disabled'}><i class="fas fa-trash"></i> حذف جميع تلاوات الآيات</button></div>`;
     }
 
     function renderAudioSettingsCard() {

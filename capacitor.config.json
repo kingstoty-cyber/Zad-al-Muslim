@@ -1,0 +1,6 @@
+{
+  "appId": "ly.zadalmuslim.app",
+  "appName": "زاد المسلم",
+  "webDir": "www",
+  "server": {"androidScheme": "https"}
+}
