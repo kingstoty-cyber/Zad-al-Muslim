@@ -1,13 +1,40 @@
-name: Build Android APK
+name: Build Android APK and AAB
 
 on:
   workflow_dispatch:
+  push:
+    tags: ['v*']
 
 permissions:
-  contents: read
+  contents: write
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  build-debug-apk:
+  check-signing:
+    name: Check signing configuration
+    runs-on: ubuntu-latest
+    outputs:
+      available: ${{ steps.check.outputs.available }}
+    steps:
+      - id: check
+        shell: bash
+        env:
+          KS: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KP: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KA: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KPW: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [[ -n "$KS" && -n "$KP" && -n "$KA" && -n "$KPW" ]]; then
+            echo 'available=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'available=false' >> "$GITHUB_OUTPUT"
+          fi
+
+  build-debug:
+    name: Debug APK
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -18,17 +45,112 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: '17'
           cache: gradle
       - name: Install dependencies
         run: npm ci --ignore-scripts --no-audit --no-fund
-      - name: Prepare Android project
-        run: npm run prepare:web && npx cap add android && npx cap sync android
+      - name: Add and sync Capacitor Android
+        run: npm run android:add && npm run android:sync
+      - name: Run Android unit tests
+        working-directory: android
+        run: ./gradlew test
       - name: Build debug APK
-        run: cd android && ./gradlew assembleDebug
-      - name: Upload APK artifact
+        working-directory: android
+        run: ./gradlew assembleDebug
+      - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
           name: Zad-al-Muslim-debug-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
+
+  build-signed:
+    name: Signed Release APK and AAB
+    needs: check-signing
+    if: ${{ needs.check-signing.outputs.available == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+      - name: Install dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Add and sync Capacitor Android
+        run: npm run android:add && npm run android:sync
+      - name: Decode signing keystore
+        shell: bash
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          umask 077
+          printf '%s' "$KEYSTORE_B64" | base64 --decode > "$RUNNER_TEMP/zad-release.keystore"
+          test -s "$RUNNER_TEMP/zad-release.keystore"
+      - name: Configure release signing
+        working-directory: android
+        env:
+          KEYSTORE_FILE: ${{ runner.temp }}/zad-release.keystore
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('app/build.gradle')
+          s=p.read_text()
+          block='''\n    signingConfigs {\n        release {\n            storeFile file(System.getenv("KEYSTORE_FILE"))\n            storePassword System.getenv("KEYSTORE_PASSWORD")\n            keyAlias System.getenv("KEY_ALIAS")\n            keyPassword System.getenv("KEY_PASSWORD")\n        }\n    }\n'''
+          if 'signingConfigs {' not in s: s=s.replace('android {', 'android {'+block, 1)
+          if 'signingConfig signingConfigs.release' not in s:
+              s=re.sub(r'(buildTypes\s*\{\s*release\s*\{)', r'\1\n            signingConfig signingConfigs.release', s, count=1)
+          p.write_text(s)
+          PY
+      - name: Run Android tests and build signed outputs
+        working-directory: android
+        run: |
+          ./gradlew test
+          ./gradlew assembleRelease
+          ./gradlew bundleRelease
+      - name: Rename outputs and checksums
+        run: |
+          cp android/app/build/outputs/apk/release/app-release.apk Zad-al-Muslim-${GITHUB_REF_NAME}.apk
+          cp android/app/build/outputs/bundle/release/app-release.aab Zad-al-Muslim-${GITHUB_REF_NAME}.aab
+          git archive --format=zip --output=Zad-al-Muslim-${GITHUB_REF_NAME}-source.zip HEAD
+          sha256sum Zad-al-Muslim-${GITHUB_REF_NAME}.apk Zad-al-Muslim-${GITHUB_REF_NAME}.aab Zad-al-Muslim-${GITHUB_REF_NAME}-source.zip > SHA256SUMS.txt
+      - name: Upload signed release files
+        uses: actions/upload-artifact@v4
+        with:
+          name: Zad-al-Muslim-${{ github.ref_name }}-release
+          path: |
+            Zad-al-Muslim-${{ github.ref_name }}.apk
+            Zad-al-Muslim-${{ github.ref_name }}.aab
+            Zad-al-Muslim-${{ github.ref_name }}-source.zip
+            SHA256SUMS.txt
+          if-no-files-found: error
+
+  publish-release:
+    name: Publish prerelease assets
+    needs: [check-signing, build-signed]
+    if: ${{ needs.check-signing.outputs.available == 'true' && startsWith(github.ref, 'refs/tags/v4.9.3-beta.2') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: Zad-al-Muslim-${{ github.ref_name }}-release
+          path: release
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          prerelease: true
+          files: |
+            release/Zad-al-Muslim-${{ github.ref_name }}.apk
+            release/Zad-al-Muslim-${{ github.ref_name }}.aab
+            release/Zad-al-Muslim-${{ github.ref_name }}-source.zip
+            release/SHA256SUMS.txt
+          generate_release_notes: true

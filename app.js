@@ -1449,7 +1449,7 @@ function renderSettings() {
 
         <div class="card">
             <div class="card-title"><i class="fas fa-circle-info"></i> حول التطبيق</div>
-            <p>تطبيق <span style="color: var(--primary-color)">زاد المسلم</span> - الإصدار ${window.ZAD_APP?.version || '4.9.3-beta.1'}</p>
+            <p>تطبيق <span style="color: var(--primary-color)">زاد المسلم</span> - الإصدار ${window.ZAD_APP?.version || '4.9.3-beta.2'}</p>
             <p style="font-size: 0.9rem; line-height: 1.6;">
                 تطبيق متكامل لمتابعة العبادات اليومية، الأذكار، وقراءة القرآن الكريم.<br>
                 يعمل دون اتصال في القرآن والأذكار بعد التحميل الأول ويحفظ تقدمك محلياً.<br>
@@ -1524,7 +1524,8 @@ function renderMore() {
         ['fa-compass', 'القبلة', 'معرفة اتجاه القبلة', 'renderQibla()'],
         ['fa-palette', 'المظهر', 'اختيار الألوان ووضع القراءة', "loadTab('themes')"],
         ['fa-user-gear', 'الإعدادات', 'التنبيهات والبيانات والخصوصية', "loadTab('settings')"],
-        ['fa-download', 'التنزيلات', 'إدارة التلاوات المحفوظة', 'renderAudioDownloads()']
+        ['fa-download', 'التنزيلات', 'إدارة التلاوات المحفوظة', 'renderAudioDownloads()'],
+        ['fa-mobile-screen-button', 'تطبيق Android', 'v4.9.3-beta.2 — APK وAAB عند اكتمال البناء', "window.open('https://github.com/kingstoty-cyber/Zad-al-Muslim/releases/tag/v4.9.3-beta.2','_blank','noopener')"]
     ];
     content.innerHTML = `
         <div class="simple-page-heading">
