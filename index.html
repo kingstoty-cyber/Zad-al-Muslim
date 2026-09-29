@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تطبيق زاد المسلم v4.9.1 Beta</title>
+    <title>تطبيق زاد المسلم v4.9.1 Beta 2</title>
     <meta name="theme-color" content="#0f5132">
     <meta name="description" content="زاد المسلم: القرآن الكريم والأذكار والمسبحة ومتابعة العبادات">
     <link rel="manifest" href="manifest.webmanifest">
@@ -31,6 +31,7 @@
     <script defer src="quran-video.js"></script>
     <script defer src="app-shell.js"></script>
     <script defer src="native-bridge.js"></script>
+    <script defer src="simplification.js"></script>
 </head>
 <body id="app-body">
     <a class="skip-link" href="#page-content">تخطي إلى المحتوى</a>
@@ -59,25 +60,21 @@
             <i class="fas fa-home"></i>
             <span>الرئيسية</span>
         </div>
-        <div class="nav-item" data-tab="adhkar">
-            <i class="fas fa-hands-praying"></i>
-            <span>الأذكار</span>
-        </div>
-        <div class="nav-item" data-tab="tasbeeh">
-            <i class="fas fa-circle-notch"></i>
-            <span>المسبحة</span>
-        </div>
         <div class="nav-item" data-tab="quran">
             <i class="fas fa-book-quran"></i>
             <span>القرآن</span>
+        </div>
+        <div class="nav-item" data-tab="adhkar">
+            <i class="fas fa-hands-praying"></i>
+            <span>الأذكار</span>
         </div>
         <div class="nav-item" data-tab="audio-quran">
             <i class="fas fa-headphones"></i>
             <span>المسموع</span>
         </div>
-        <div class="nav-item" data-tab="settings">
-            <i class="fas fa-user-gear"></i>
-            <span>الإعدادات</span>
+        <div class="nav-item" data-tab="more">
+            <i class="fas fa-ellipsis"></i>
+            <span>المزيد</span>
         </div>
     </nav>
 
