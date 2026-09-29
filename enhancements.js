@@ -8,10 +8,10 @@
   function read(key,fallback=null){try{return JSON.parse(localStorage.getItem(key))??fallback}catch(_){return fallback}}
   function localDay(date=new Date()){return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`}
   function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-  function appData(){const data={};Object.keys(localStorage).filter(k=>APP_KEY.test(k)&&k!=='zad_audio_downloads').sort().forEach(k=>data[k]=localStorage.getItem(k));return data}
+  function appData(){const data={};const excluded=new Set(['zad_audio_downloads','zad_surah_audio_downloads']);Object.keys(localStorage).filter(k=>APP_KEY.test(k)&&!excluded.has(k)).sort().forEach(k=>data[k]=localStorage.getItem(k));return data}
 
   function exportData(){
-    const payload={app:'زاد المسلم',version:'4.6.0',exportedAt:new Date().toISOString(),data:appData()};
+    const payload={app:'زاد المسلم',version:window.ZAD_APP?.version||'4.9.3-beta.1',exportedAt:new Date().toISOString(),data:appData()};
     const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});const a=document.createElement('a');
     a.href=URL.createObjectURL(blob);a.download=`zad-al-muslim-backup-${new Date().toISOString().slice(0,10)}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
   }
@@ -75,7 +75,7 @@
     <button class="btn-primary backup-btn" onclick="exportZadData()"><i class="fas fa-file-export"></i> تصدير نسخة احتياطية</button><button class="btn-primary backup-btn" onclick="chooseZadImport()"><i class="fas fa-file-import"></i> استعادة نسخة احتياطية</button><input id="zad-import-file" type="file" accept="application/json,.json" hidden onchange="importZadData(this)"></div>
     <p class="accuracy-note">النسخة الاحتياطية تشمل الورد والعلامات والأذكار والمسبحة وإعدادات الصلاة. لا تُرسل إلى أي خادم.</p></div>`}
   const baseSettings=window.renderSettings;
-  function renderSettingsV43(){baseSettings();const content=document.getElementById('page-content');if(content)content.insertAdjacentHTML('beforeend',pwaCard())}
+  function renderSettingsV43(){baseSettings();const content=document.getElementById('page-content');if(content)content.insertAdjacentHTML('beforeend',`<h3 class="settings-group-title">التطبيق والتنبيهات</h3>${pwaCard()}`)}
 
   async function installApp(){if(!installPrompt)return;installPrompt.prompt();await installPrompt.userChoice;installPrompt=null;if(AppState.currentTab==='settings')renderSettingsV43()}
   function showBanner(text,kind='info',action=''){let b=document.getElementById('app-status-banner');if(!b){b=document.createElement('div');b.id='app-status-banner';document.body.prepend(b)}b.className=`app-status-banner ${kind}`;b.innerHTML=`<span>${text}</span>${action}`;}

@@ -34,6 +34,8 @@ function getManualLocation() {
 
 function clearManualLocation() {
     localStorage.removeItem('manual_location');
+    localStorage.removeItem('cached_prayer_times');
+    localStorage.removeItem('zad_prayer_v42_cache');
     try {
         const saved = JSON.parse(localStorage.getItem('user_location') || 'null');
         if (saved?.source === 'manual') localStorage.removeItem('user_location');
@@ -41,6 +43,54 @@ function clearManualLocation() {
         localStorage.removeItem('user_location');
     }
     console.log('تم إزالة الموقع اليدوي');
+}
+
+function setupManualLocationPanel() {
+    const toggleBtn = document.getElementById('manual-toggle');
+    const panel = document.getElementById('manual-location-panel');
+    const closeBtn = document.getElementById('manual-close');
+    const saveBtn = document.getElementById('save-manual-btn');
+    const clearBtn = document.getElementById('clear-manual-btn');
+    const latInput = document.getElementById('manual-lat');
+    const lonInput = document.getElementById('manual-lon');
+    const cityInput = document.getElementById('manual-city');
+    if (!toggleBtn || !panel || !saveBtn || !clearBtn || !latInput || !lonInput || !cityInput) return;
+
+    const closePanel = () => { panel.style.display = 'none'; };
+    toggleBtn.addEventListener('click', () => {
+        const saved = getManualLocation();
+        latInput.value = saved?.lat ?? '';
+        lonInput.value = saved?.lon ?? '';
+        cityInput.value = saved?.city ?? '';
+        panel.style.display = 'block';
+    });
+    closeBtn?.addEventListener('click', closePanel);
+    saveBtn.addEventListener('click', async () => {
+        const lat = Number.parseFloat(latInput.value);
+        const lon = Number.parseFloat(lonInput.value);
+        if (!Number.isFinite(lat) || !Number.isFinite(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+            alert('أدخل خط عرض بين -90 و90، وخط طول بين -180 و180.');
+            return;
+        }
+        saveManualLocation(lat, lon, cityInput.value.trim());
+        try {
+            if (typeof window.updatePrayerTimesWithFeedback === 'function') await window.updatePrayerTimesWithFeedback();
+            else if (typeof window.updatePrayerTimes === 'function') await window.updatePrayerTimes();
+        } finally {
+            closePanel();
+            window.renderHome?.();
+        }
+    });
+    clearBtn.addEventListener('click', () => {
+        if (!confirm('هل تريد إزالة الموقع اليدوي؟')) return;
+        clearManualLocation();
+        alert('تمت إزالة الموقع اليدوي. سيُطلب GPS عند التحديث التالي، ولن تُعرض أوقات محلية تخمينية.');
+        closePanel();
+        window.renderHome?.();
+    });
+    window.addEventListener('click', event => {
+        if (panel.style.display === 'block' && !panel.contains(event.target) && !toggleBtn.contains(event.target)) closePanel();
+    });
 }
 
 // تحميل الكاش اليومي
@@ -1290,9 +1340,8 @@ function filterThemes(filter) {
 
 function changeTheme(themeId) {
     applyTheme(themeId);
-    if (AppState.currentTab === 'themes') {
-        renderThemes();
-    }
+    if (AppState.currentTab === 'themes') renderThemes();
+    if (AppState.currentTab === 'settings') window.renderSettings?.();
 }
 
 // ========== صفحة الإعدادات ==========
@@ -1310,6 +1359,8 @@ function renderSettings() {
     const autoTheme = Storage.load('auto_theme') || false;
     
     content.innerHTML = `
+        <div class="settings-heading"><i class="fas fa-user-gear"></i><div><h2>الإعدادات</h2><p>المظهر، الصلاة، البيانات وخصائص التطبيق في مكان واحد.</p></div></div>
+        <h3 class="settings-group-title">ملخص النشاط</h3>
         <div class="card">
             <div class="card-title"><i class="fas fa-chart-line"></i> إحصائياتك</div>
             <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin: 15px 0;">
@@ -1332,7 +1383,8 @@ function renderSettings() {
             </div>
         </div>
 
-        <div class="card">
+        <h3 class="settings-group-title">المظهر والقراءة</h3>
+        <div class="card settings-card">
             <div class="card-title"><i class="fas fa-adjust"></i> الوضع النهاري / الليلي</div>
             
             <div style="display: flex; gap: 15px; margin: 20px 0;">
@@ -1370,7 +1422,19 @@ function renderSettings() {
             </div>
         </div>
 
-        <div class="card">
+        <div class="card settings-card">
+            <div class="card-title"><i class="fas fa-palette"></i> ألوان التطبيق</div>
+            <p class="settings-description">اختر السمة التي تناسب القراءة نهارًا أو ليلًا. يتم حفظ اختيارك تلقائيًا.</p>
+            <div class="settings-theme-filters">
+                <button class="app-button" onclick="filterThemes('dark')"><i class="fas fa-moon"></i> ليلية</button>
+                <button class="app-button" onclick="filterThemes('light')"><i class="fas fa-sun"></i> نهارية</button>
+                <button class="app-button" onclick="filterThemes('all')"><i class="fas fa-border-all"></i> الكل</button>
+            </div>
+            <div class="theme-selector" id="themes-container">${renderFilteredThemes('all')}</div>
+        </div>
+
+        <h3 class="settings-group-title">التحكم والبيانات</h3>
+        <div class="card settings-card">
             <div class="card-title"><i class="fas fa-gears"></i> الإعدادات والتحكم</div>
             <button class="btn-primary" style="margin-bottom: 10px;" onclick="resetToday()">
                 <i class="fas fa-redo"></i> إعادة تعيين أعمال اليوم
@@ -1385,7 +1449,7 @@ function renderSettings() {
 
         <div class="card">
             <div class="card-title"><i class="fas fa-circle-info"></i> حول التطبيق</div>
-            <p>تطبيق <span style="color: var(--primary-color)">زاد المسلم</span> - الإصدار 4.6.0</p>
+            <p>تطبيق <span style="color: var(--primary-color)">زاد المسلم</span> - الإصدار ${window.ZAD_APP?.version || '4.9.3-beta.1'}</p>
             <p style="font-size: 0.9rem; line-height: 1.6;">
                 تطبيق متكامل لمتابعة العبادات اليومية، الأذكار، وقراءة القرآن الكريم.<br>
                 يعمل دون اتصال في القرآن والأذكار بعد التحميل الأول ويحفظ تقدمك محلياً.<br>
@@ -1406,7 +1470,19 @@ function renderSettings() {
                 </div>
             </div>
         </div>
+
+        <div class="card community-counter-card" id="community-counter-card" aria-live="polite">
+            <div class="community-counter-icon"><i class="fas fa-users"></i></div>
+            <div class="community-counter-copy">
+                <div class="card-title">مجتمع زاد المسلم</div>
+                <p id="community-counter-message">جارٍ معرفة عدد مستخدمي التطبيق…</p>
+                <small>يُحتسب هذا الجهاز مرة واحدة دون اسم أو بريد أو موقع جغرافي.</small>
+            </div>
+            <div class="community-counter-number" id="community-counter-number">—</div>
+        </div>
     `;
+
+    window.ZadCommunityCounter?.mount();
 }
 
 function resetToday() {
@@ -1421,7 +1497,7 @@ async function clearAllData() {
     if (confirm("هل أنت متأكد من حذف بيانات زاد المسلم؟ لا يمكن التراجع عن هذا الإجراء!")) {
         Object.keys(localStorage).filter(key => /^(zad_|quran_|prayer_|adhkar_|tasbeeh_|current_dhikr_|theme_|auto_theme|manual_location|user_location|cached_prayer_times)/.test(key)).forEach(key => localStorage.removeItem(key));
         if ('caches' in window) {
-            try { await caches.delete('zad-quran-audio-v45'); } catch (_) {}
+            try { await Promise.all([caches.delete('zad-quran-audio-v45'), caches.delete('zad-quran-surah-audio-v461')]); } catch (_) {}
         }
         AppState = {
             currentTab: 'home',
@@ -1436,6 +1512,35 @@ async function clearAllData() {
         location.reload();
     }
 }
+
+// ========== صفحة المزيد ==========
+
+function renderMore() {
+    const content = document.getElementById('page-content');
+    if (!content) return;
+    content.className = 'fade-in more-page';
+    const items = [
+        ['fa-circle-notch', 'المسبحة', 'تسبيح سريع مع حفظ العدد', "loadTab('tasbeeh')"],
+        ['fa-compass', 'القبلة', 'معرفة اتجاه القبلة', 'renderQibla()'],
+        ['fa-palette', 'المظهر', 'اختيار الألوان ووضع القراءة', "loadTab('themes')"],
+        ['fa-user-gear', 'الإعدادات', 'التنبيهات والبيانات والخصوصية', "loadTab('settings')"],
+        ['fa-download', 'التنزيلات', 'إدارة التلاوات المحفوظة', 'renderAudioDownloads()']
+    ];
+    content.innerHTML = `
+        <div class="simple-page-heading">
+            <i class="fas fa-ellipsis"></i>
+            <div><h2>المزيد</h2><p>الأدوات والإعدادات الثانوية في مكان واحد.</p></div>
+        </div>
+        <div class="more-grid">
+            ${items.map(([icon, title, description, action]) => `<button class="more-card" onclick="${action}">
+                <i class="fas ${icon}"></i>
+                <span><strong>${title}</strong><small>${description}</small></span>
+                <i class="fas fa-chevron-left more-arrow"></i>
+            </button>`).join('')}
+        </div>`;
+}
+
+window.renderMore = renderMore;
 
 // ========== الدوال العامة ==========
 
@@ -1457,6 +1562,8 @@ function loadTab(tabName) {
         case 'adhkar': (window.renderAdhkar || renderAdhkar)(); break;
         case 'tasbeeh': (window.renderTasbeeh || renderTasbeeh)(); break;
         case 'quran': (window.renderQuran || renderQuran)(); break;
+        case 'audio-quran': window.renderAudioQuran?.(); break;
+        case 'more': (window.renderMore || renderMore)(); break;
         case 'themes': (window.renderThemes || renderThemes)(); break;
         case 'settings': (window.renderSettings || renderSettings)(); break;
     }
@@ -1596,3 +1703,4 @@ window.saveManualLocation = saveManualLocation;
 window.getManualLocation = getManualLocation;
 window.clearManualLocation = clearManualLocation;
 window.needsUpdateForManualLocation = needsUpdateForManualLocation;
+setupManualLocationPanel();

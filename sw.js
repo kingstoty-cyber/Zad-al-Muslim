@@ -1,27 +1,29 @@
-const CACHE_NAME = 'zad-al-muslim-v4-6-0';
+const CACHE_NAME = 'zad-al-muslim-v4-9-3-beta-1';
 const AUDIO_CACHE = 'zad-quran-audio-v45';
+const SURAH_AUDIO_CACHE = 'zad-quran-surah-audio-v461';
 const APP_ASSETS = [
-  './', './index.html', './offline.html', './styles.css', './data.js', './app.js', './quran.js', './prayer-v42.js', './enhancements-v43.js', './quran-v44.js', './quran-audio-v46.js',
+  './', './index.html', './offline.html', './privacy.html', './styles.css', './config.js', './supabase-counter.js', './data.js', './app.js', './quran.js', './prayer.js', './enhancements.js', './quran-features.js', './quran-audio.js', './surah-audio.js', './quran-library.js', './audio-downloads.js', './quran-v48.js', './quran-video.js', './app-shell.js', './native-bridge.js', './simplification.js',
   './assets/css/fontawesome.min.css', './assets/css/local-fonts.css',
   './assets/webfonts/fa-solid-900.woff2', './assets/webfonts/fa-regular-400.woff2',
   './assets/fonts/amiri.ttf', './assets/fonts/tajawal-300.ttf', './assets/fonts/tajawal-500.ttf', './assets/fonts/tajawal-800.ttf',
   './manifest.webmanifest', './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png',
-  './quran-data/chapters.json', './quran-data/uthmani.json', './quran-data/navigation.json', './quran-data/reciters.json', './QURAN_DATA_LICENSE.txt', './THIRD_PARTY_ASSETS.txt'
+  './quran-data/chapters.json', './quran-data/uthmani.json', './quran-data/navigation.json', './quran-data/reciters.json', './quran-data/surah-reciters.json', './QURAN_DATA_LICENSE.txt', './THIRD_PARTY_ASSETS.txt'
 ];
 
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_ASSETS)).then(() => self.skipWaiting()));
 });
 self.addEventListener('activate', event => {
-  event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key !== CACHE_NAME && key !== AUDIO_CACHE).map(key => caches.delete(key)))).then(() => self.clients.claim()));
+  event.waitUntil(Promise.all([self.registration.navigationPreload?.enable(),caches.keys().then(keys => Promise.all(keys.filter(key => key !== CACHE_NAME && key !== AUDIO_CACHE && key !== SURAH_AUDIO_CACHE).map(key => caches.delete(key))))]).then(() => self.clients.claim()));
 });
 self.addEventListener('message', event => {
   if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
+  if (event.data && event.data.type === 'GET_VERSION') event.source?.postMessage({type:'APP_VERSION',version:'4.9.3-beta.1'});
 });
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
   if (event.request.mode === 'navigate') {
-    event.respondWith(fetch(event.request).then(response => {
+    event.respondWith((event.preloadResponse||Promise.resolve()).then(preloaded=>preloaded||fetch(event.request)).then(response => {
       if (response.ok) caches.open(CACHE_NAME).then(cache => cache.put('./index.html', response.clone()));
       return response;
     }).catch(async () => (await caches.match('./index.html')) || caches.match('./offline.html')));
