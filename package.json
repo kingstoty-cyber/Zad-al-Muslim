@@ -1,6 +1,6 @@
 {
   "name": "zad-al-muslim",
-  "version": "4.9.0-beta.1",
+  "version": "4.9.1-beta.1",
   "private": true,
   "description": "زاد المسلم — حزمة الويب وتجهيز Android عبر Capacitor",
   "scripts": {

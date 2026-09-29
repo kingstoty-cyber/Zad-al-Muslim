@@ -1225,3 +1225,53 @@ body .theme-orange-light .ayah-of-day {
 @media(max-width:520px){.quran-video-result .video-share-grid{grid-template-columns:1fr}}
 .native-permissions-page{max-width:760px;margin:0 auto}.permission-list{display:grid;gap:9px}.permission-list article{display:grid;grid-template-columns:38px 1fr auto;align-items:center;gap:10px;padding:11px;border-radius:11px;background:color-mix(in srgb,var(--primary-color) 8%,transparent)}.permission-list article>i{color:var(--primary-color);font-size:1.2rem}.permission-list article>div{display:grid;gap:3px}.permission-list small{opacity:.7}.native-app .header-section{padding-top:max(16px,env(safe-area-inset-top))}
 @media(max-width:520px){.permission-list article{grid-template-columns:34px 1fr}.permission-list article>button,.permission-list article>span{grid-column:1/-1;width:100%;box-sizing:border-box;text-align:center}}
+.community-counter-card {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 100px;
+    overflow: hidden;
+    position: relative;
+}
+
+.community-counter-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 16px;
+    display: grid;
+    place-items: center;
+    color: #111;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    font-size: 1.15rem;
+}
+
+.community-counter-copy p {
+    margin: 5px 0 3px;
+}
+
+.community-counter-copy small {
+    opacity: .7;
+    line-height: 1.5;
+}
+
+.community-counter-number {
+    min-width: 64px;
+    text-align: center;
+    font-size: 1.55rem;
+    font-weight: 800;
+    color: var(--primary-color);
+    font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 420px) {
+    .community-counter-card {
+        grid-template-columns: auto 1fr;
+    }
+
+    .community-counter-number {
+        grid-column: 1 / -1;
+        width: 100%;
+        text-align: center;
+    }
+}

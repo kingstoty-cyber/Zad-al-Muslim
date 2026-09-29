@@ -1,6 +1,15 @@
 
 # زاد المسلم v4.9 Beta 1
 
+## عداد مجتمع زاد المسلم (Supabase)
+
+1. أنشئ مشروعًا في Supabase.
+2. افتح SQL Editor وشغّل الملف `supabase/schema.sql` مرة واحدة.
+3. من Project Settings → API انسخ Project URL والمفتاح العام Publishable/anon فقط.
+4. ضعهما داخل `window.ZAD_APP.supabase` في `config.js`.
+
+لا تضع مفتاح `service_role` داخل الموقع. العداد لا يرسل الاسم أو البريد أو الموقع أو بيانات العبادة، ويحتسب معرّفًا عشوائيًا محفوظًا محليًا في الجهاز.
+
 ## بداية تطبيق Android
 
 - إنشاء مشروع Capacitor فعلي بمعرّف `ly.zadalmuslim.app` وهدف Android API 35.
