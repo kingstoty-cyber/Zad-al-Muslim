@@ -1449,7 +1449,7 @@ function renderSettings() {
 
         <div class="card">
             <div class="card-title"><i class="fas fa-circle-info"></i> حول التطبيق</div>
-            <p>تطبيق <span style="color: var(--primary-color)">زاد المسلم</span> - الإصدار ${window.ZAD_APP?.version || '4.9.1-beta.2'}</p>
+            <p>تطبيق <span style="color: var(--primary-color)">زاد المسلم</span> - الإصدار ${window.ZAD_APP?.version || '4.9.1-beta.3'}</p>
             <p style="font-size: 0.9rem; line-height: 1.6;">
                 تطبيق متكامل لمتابعة العبادات اليومية، الأذكار، وقراءة القرآن الكريم.<br>
                 يعمل دون اتصال في القرآن والأذكار بعد التحميل الأول ويحفظ تقدمك محلياً.<br>
@@ -1513,6 +1513,35 @@ async function clearAllData() {
     }
 }
 
+// ========== صفحة المزيد ==========
+
+function renderMore() {
+    const content = document.getElementById('page-content');
+    if (!content) return;
+    content.className = 'fade-in more-page';
+    const items = [
+        ['fa-circle-notch', 'المسبحة', 'تسبيح سريع مع حفظ العدد', "loadTab('tasbeeh')"],
+        ['fa-compass', 'القبلة', 'معرفة اتجاه القبلة', 'renderQibla()'],
+        ['fa-palette', 'المظهر', 'اختيار الألوان ووضع القراءة', "loadTab('themes')"],
+        ['fa-user-gear', 'الإعدادات', 'التنبيهات والبيانات والخصوصية', "loadTab('settings')"],
+        ['fa-download', 'التنزيلات', 'إدارة التلاوات المحفوظة', 'renderAudioDownloads()']
+    ];
+    content.innerHTML = `
+        <div class="simple-page-heading">
+            <i class="fas fa-ellipsis"></i>
+            <div><h2>المزيد</h2><p>الأدوات والإعدادات الثانوية في مكان واحد.</p></div>
+        </div>
+        <div class="more-grid">
+            ${items.map(([icon, title, description, action]) => `<button class="more-card" onclick="${action}">
+                <i class="fas ${icon}"></i>
+                <span><strong>${title}</strong><small>${description}</small></span>
+                <i class="fas fa-chevron-left more-arrow"></i>
+            </button>`).join('')}
+        </div>`;
+}
+
+window.renderMore = renderMore;
+
 // ========== الدوال العامة ==========
 
 function loadTab(tabName) {
@@ -1534,7 +1563,7 @@ function loadTab(tabName) {
         case 'tasbeeh': (window.renderTasbeeh || renderTasbeeh)(); break;
         case 'quran': (window.renderQuran || renderQuran)(); break;
         case 'audio-quran': window.renderAudioQuran?.(); break;
-        case 'more': window.renderMore?.(); break;
+        case 'more': (window.renderMore || renderMore)(); break;
         case 'themes': (window.renderThemes || renderThemes)(); break;
         case 'settings': (window.renderSettings || renderSettings)(); break;
     }
