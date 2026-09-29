@@ -13,7 +13,7 @@
 
 ## البناء على Manus أو الكمبيوتر
 
-1. ثبّت Android Studio وAndroid SDK API 35 وJDK 17 وNode.js، أو استخدم Workflow GitHub الذي يثبت هذه الأدوات تلقائيًا.
+1. ثبّت Android Studio وAndroid SDK API 35 وJDK 21 وNode.js، أو استخدم Workflow GitHub الذي يثبت هذه الأدوات تلقائيًا.
 2. نفّذ `npm install` ثم `npm run android:debug`.
 3. ستجد APK التجريبي في `android/app/build/outputs/apk/debug/app-debug.apk`.
 4. بعد الاختبار أنشئ مفتاح توقيع خارج المستودع واضبط توقيع Release.
