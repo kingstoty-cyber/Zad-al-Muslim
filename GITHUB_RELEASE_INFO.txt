@@ -1,0 +1,11 @@
+Zad Al-Muslim v4.9.3-beta.5.1 — GitHub Release Information
+
+Repository: https://github.com/kingstoty-cyber/Zad-al-Muslim
+Requested tag: v4.9.3-beta.5.1
+Status at report update: publication pending final repository inspection.
+
+Release assets prepared locally:
+- Zad-Al-Muslim-v4.9.3-beta.5.1-release.apk
+- Zad-Al-Muslim-v4.9.3-beta.5.1-release.aab
+- Zad-Al-Muslim-v4.9.3-beta.5.1-ANDROID-FINAL-SOURCE.zip
+- FINAL_SHA256SUMS.txt
