@@ -53,15 +53,73 @@
         const saved = safeJSON('user_location');
         return validLocation(saved) ? saved : null;
     }
-    function gpsLocation() {
-        return new Promise((resolve, reject) => {
-            if (!navigator.geolocation) return reject(new Error('الموقع غير مدعوم'));
-            navigator.geolocation.getCurrentPosition(p => {
-                const loc = { lat: p.coords.latitude, lon: p.coords.longitude, accuracy: p.coords.accuracy, source: 'gps', timestamp: Date.now() };
-                localStorage.setItem('user_location', JSON.stringify(loc)); resolve(loc);
-            }, () => reject(new Error('تعذر تحديد الموقع. أدخله يدوياً أو اسمح بخدمة الموقع.')),
-            { enableHighAccuracy: true, timeout: 12000, maximumAge: 30 * 60 * 1000 });
-        });
+    async function gpsLocation() {
+        const native = Boolean(window.Capacitor?.isNativePlatform?.());
+        const plugins = window.Capacitor?.Plugins;
+        let position;
+        if (native) {
+            const media = plugins?.AndroidMedia;
+            const geolocation = plugins?.Geolocation;
+            if (!geolocation) throw new Error('إضافة الموقع الأصلية غير جاهزة. أعد مزامنة تطبيق Android.');
+            if (media?.checkLocationServices) {
+                const service = await media.checkLocationServices();
+                if (!service.enabled) throw new Error('يرجى تفعيل خدمة الموقع في الهاتف.');
+            }
+            let permission = await geolocation.checkPermissions();
+            if (permission.location !== 'granted' && permission.coarseLocation !== 'granted') {
+                permission = await geolocation.requestPermissions();
+            }
+            if (permission.location !== 'granted' && permission.coarseLocation !== 'granted') {
+                const error = new Error('لم يتم منح إذن الموقع. يمكنك اختيار المدينة يدويًا.');
+                error.permissionDenied = true;
+                throw error;
+            }
+            position = await geolocation.getCurrentPosition({enableHighAccuracy: true, timeout: 15000, maximumAge: 60000});
+        } else {
+            if (!navigator.geolocation) throw new Error('الموقع غير مدعوم في هذا المتصفح. يمكنك اختيار المدينة يدويًا.');
+            position = await new Promise((resolve, reject) => navigator.geolocation.getCurrentPosition(resolve, reject,
+                {enableHighAccuracy: true, timeout: 15000, maximumAge: 60000}));
+        }
+        const loc = {lat: position.coords.latitude, lon: position.coords.longitude, accuracy: position.coords.accuracy, source: 'gps', timestamp: Date.now()};
+        localStorage.setItem('user_location', JSON.stringify(loc));
+        return loc;
+    }
+
+    function setLocationFeedback(message, showSettings = false) {
+        const feedback = document.getElementById('location-feedback');
+        if (feedback) feedback.textContent = message;
+        const settingsButton = document.getElementById('open-location-settings');
+        if (settingsButton) settingsButton.hidden = !showSettings;
+    }
+
+    async function requestPrayerLocation() {
+        const button = document.getElementById('prayer-use-location');
+        if (button?.disabled) return;
+        if (button) { button.disabled = true; button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ تحديد الموقع…'; }
+        setLocationFeedback('جارٍ التحقق من الإذن وخدمة الموقع…');
+        try {
+            const loc = await gpsLocation();
+            setLocationFeedback('تم تحديد الموقع. جارٍ تحديث مواقيت الصلاة…');
+            await fetchTimes(loc, true);
+            renderHomeV42();
+            setLocationFeedback('تم تحديد الموقع وتحديث مواقيت الصلاة بنجاح.');
+        } catch (error) {
+            const webPermissionDenied = error?.code === 1;
+            const servicesDisabled = error?.code === 2 || /location services|provider.*disabled|location.*disabled/i.test(String(error?.message || ''));
+            const permissionDenied = error?.permissionDenied || webPermissionDenied;
+            setLocationFeedback(permissionDenied ? 'لم يتم منح إذن الموقع. يمكنك اختيار المدينة يدويًا.' : servicesDisabled ? 'يرجى تفعيل خدمة الموقع في الهاتف.' : `تعذر تحديد الموقع خلال المهلة المحددة. ${error.message || ''} يمكنك اختيار المدينة يدويًا.`, permissionDenied && Boolean(window.Capacitor?.isNativePlatform?.()));
+        } finally {
+            const current = document.getElementById('prayer-use-location');
+            if (current) { current.disabled = false; current.innerHTML = '<i class="fas fa-location-crosshairs"></i> استخدام موقعي'; }
+        }
+    }
+
+    async function openLocationAppSettings() {
+        try {
+            const media = window.Capacitor?.Plugins?.AndroidMedia;
+            if (!media?.openAppSettings) throw new Error('إعدادات التطبيق غير متاحة.');
+            await media.openAppSettings();
+        } catch (error) { setLocationFeedback(error.message); }
     }
     function cacheMatches(c, loc, s) {
         return c && c.date === todayKey() && Math.abs(c.lat - loc.lat) < .002 && Math.abs(c.lon - loc.lon) < .002 &&
@@ -89,7 +147,7 @@
     async function updatePrayerTimesV42(force = false) {
         let loc = currentLocation();
         try {
-            if (!loc) loc = await gpsLocation();
+            if (!loc) throw new Error('حدد موقعك يدويًا أو اضغط «استخدام موقعي» أولًا.');
             await fetchTimes(loc, force); if (AppState.currentTab === 'home') renderHomeV42(); return true;
         }
         catch (error) {
@@ -102,9 +160,13 @@
     }
     async function updateWithFeedback() {
         const btn = document.getElementById('prayer-refresh'); if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ التحديث'; }
-        try { await updatePrayerTimesV42(true); alert('تم تحديث المواقيت من المصدر بنجاح.'); }
-        catch (e) { alert(`${e.message}\nسيستمر عرض آخر مواقيت موثوقة إن كانت محفوظة.`); }
-        finally { if (AppState.currentTab === 'home') renderHomeV42(); }
+        let message = '';
+        try { await updatePrayerTimesV42(true); message = 'تم تحديث المواقيت من المصدر بنجاح.'; }
+        catch (e) { message = `${e.message}\nسيستمر عرض آخر مواقيت موثوقة إن كانت محفوظة.`; }
+        finally {
+            if (AppState.currentTab === 'home') renderHomeV42();
+            setLocationFeedback(message);
+        }
     }
     function prayerStatus() {
         const cache = safeJSON(CACHE_KEY);
@@ -139,7 +201,8 @@
           <div class="card"><div class="card-title"><i class="fas fa-mosque"></i> مواقيت الصلاة الدقيقة</div>
             <div class="prayer-times">${PrayerTimes.map(p => `<div class="prayer-time ${p.name === 'الشروق' ? 'sunrise' : ''}"><div class="name">${p.name}</div><div class="time">${displayTime(p.time)}</div></div>`).join('')}</div>
             <div class="prayer-meta"><div><i class="fas fa-location-dot"></i> ${locationLabel(loc)}</div><div class="source-status ${status.cls}"><i class="fas fa-circle-check"></i> ${status.text}</div></div>
-            <div class="prayer-actions"><button id="prayer-refresh" class="btn-primary" onclick="updatePrayerTimesWithFeedback()"><i class="fas fa-rotate"></i> تحديث دقيق</button><button class="btn-primary qibla-button" onclick="renderQibla()"><i class="fas fa-compass"></i> اتجاه القبلة</button></div>
+            <div class="prayer-actions"><button id="prayer-use-location" class="btn-primary" onclick="requestPrayerLocation()"><i class="fas fa-location-crosshairs"></i> استخدام موقعي</button><button id="prayer-refresh" class="btn-primary" onclick="updatePrayerTimesWithFeedback()"><i class="fas fa-rotate"></i> تحديث دقيق</button><button class="btn-primary" onclick="document.getElementById('manual-toggle')?.click()"><i class="fas fa-city"></i> اختيار المدينة يدويًا</button><button class="btn-primary qibla-button" onclick="renderQibla()"><i class="fas fa-compass"></i> اتجاه القبلة</button></div>
+            <p id="location-feedback" class="accuracy-note" role="status" aria-live="polite"></p><button id="open-location-settings" class="btn-secondary" onclick="openLocationAppSettings()" hidden>فتح إعدادات التطبيق</button>
             <p class="accuracy-note">قد تختلف المواقيت دقائق قليلة حسب اعتماد مسجدك المحلي؛ اختر طريقة الحساب المناسبة واضبط الفروق من الإعدادات.</p>
           </div>
           <div class="card"><div class="card-title"><i class="fas fa-calendar-check"></i> متابعة الصلوات</div>
@@ -226,6 +289,7 @@
     }
     window.renderHome = renderHomeV42; window.renderSettings = renderSettingsV42; window.updatePrayerTimes = updatePrayerTimesV42;
     window.updatePrayerTimesWithFeedback = updateWithFeedback; window.renderQibla = renderQibla; window.startQiblaCompass = startCompass; window.savePrayerSettings = savePrayerSettingsUI;
+    window.requestPrayerLocation = requestPrayerLocation; window.openLocationAppSettings = openLocationAppSettings;
     const initialCache = safeJSON(CACHE_KEY);
     const initialLocation = currentLocation();
     const initialMatches = !initialLocation || (Math.abs(Number(initialCache?.lat) - Number(initialLocation.lat)) < .02 && Math.abs(Number(initialCache?.lon) - Number(initialLocation.lon)) < .02);

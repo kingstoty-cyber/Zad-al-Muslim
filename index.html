@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تطبيق زاد المسلم v4.9.3 Beta 5.1</title>
+    <title>تطبيق زاد المسلم v4.9.3 Beta 5.2</title>
     <meta name="theme-color" content="#0f5132">
     <meta name="description" content="زاد المسلم: القرآن الكريم والأذكار والمسبحة ومتابعة العبادات">
     <link rel="manifest" href="manifest.webmanifest">
@@ -14,24 +14,24 @@
     <link rel="stylesheet" href="assets/css/local-fonts.css">
     
     <!-- ملفات التطبيق -->
-    <link rel="stylesheet" href="styles.css?v=4.9.3-beta.5.1">
-    <script defer src="config.js?v=4.9.3-beta.5.1"></script>
-    <script defer src="supabase-counter.js?v=4.9.3-beta.5.1"></script>
-    <script defer src="data.js?v=4.9.3-beta.5.1"></script>
-    <script defer src="app.js?v=4.9.3-beta.5.1"></script>
-    <script defer src="quran.js?v=4.9.3-beta.5.1"></script>
-    <script defer src="prayer.js?v=4.9.3-beta.5.1"></script>
-    <script defer src="enhancements.js?v=4.9.3-beta.5.1"></script>
-    <script defer src="quran-features.js?v=4.9.3-beta.5.1"></script>
-    <script defer src="quran-audio.js?v=4.9.3-beta.5.1"></script>
-    <script defer src="surah-audio.js?v=4.9.3-beta.5.1"></script>
-    <script defer src="quran-library.js?v=4.9.3-beta.5.1"></script>
-    <script defer src="audio-downloads.js?v=4.9.3-beta.5.1"></script>
-    <script defer src="quran-v48.js?v=4.9.3-beta.5.1"></script>
-    <script defer src="quran-video.js?v=4.9.3-beta.5.1"></script>
-    <script defer src="app-shell.js?v=4.9.3-beta.5.1"></script>
-    <script defer src="native-bridge.js?v=4.9.3-beta.5.1"></script>
-    <script defer src="simplification.js?v=4.9.3-beta.5.1"></script>
+    <link rel="stylesheet" href="styles.css?v=4.9.3-beta.5.2">
+    <script defer src="config.js?v=4.9.3-beta.5.2"></script>
+    <script defer src="supabase-counter.js?v=4.9.3-beta.5.2"></script>
+    <script defer src="data.js?v=4.9.3-beta.5.2"></script>
+    <script defer src="app.js?v=4.9.3-beta.5.2"></script>
+    <script defer src="quran.js?v=4.9.3-beta.5.2"></script>
+    <script defer src="prayer.js?v=4.9.3-beta.5.2"></script>
+    <script defer src="enhancements.js?v=4.9.3-beta.5.2"></script>
+    <script defer src="quran-features.js?v=4.9.3-beta.5.2"></script>
+    <script defer src="quran-audio.js?v=4.9.3-beta.5.2"></script>
+    <script defer src="surah-audio.js?v=4.9.3-beta.5.2"></script>
+    <script defer src="quran-library.js?v=4.9.3-beta.5.2"></script>
+    <script defer src="audio-downloads.js?v=4.9.3-beta.5.2"></script>
+    <script defer src="quran-v48.js?v=4.9.3-beta.5.2"></script>
+    <script defer src="quran-video.js?v=4.9.3-beta.5.2"></script>
+    <script defer src="app-shell.js?v=4.9.3-beta.5.2"></script>
+    <script defer src="native-bridge.js?v=4.9.3-beta.5.2"></script>
+    <script defer src="simplification.js?v=4.9.3-beta.5.2"></script>
 </head>
 <body id="app-body">
     <a class="skip-link" href="#page-content">تخطي إلى المحتوى</a>
@@ -79,7 +79,7 @@
     <div id="manual-location-panel" style="display:none; position:fixed; left:16px; right:16px; bottom:86px; z-index:9999;">
         <div style="background:rgba(0,0,0,0.8); padding:14px; border-radius:12px; color:#fff; box-shadow:0 10px 30px rgba(0,0,0,0.6);">
             <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
-                <strong>إدخال الموقع يدوياً</strong>
+                <strong>اختيار المدينة أو إدخال الموقع يدوياً</strong>
                 <button id="manual-close" style="background:transparent;border:1px solid rgba(255,255,255,0.08);color:#fff;padding:6px 8px;border-radius:8px;cursor:pointer;">إغلاق</button>
             </div>
 
@@ -88,8 +88,16 @@
                        style="flex:1; min-width:160px; padding:8px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:transparent; color:#fff;">
                 <input id="manual-lon" placeholder="خط الطول (مثال: 46.6753)" type="number" step="0.0001"
                        style="flex:1; min-width:160px; padding:8px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:transparent; color:#fff;">
-                <input id="manual-city" placeholder="المدينة (اختياري)" type="text"
+                <input id="manual-city" list="manual-city-options" placeholder="اكتب أو اختر المدينة" type="text" autocomplete="address-level2"
                        style="flex:1 0 220px; padding:8px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:transparent; color:#fff;">
+                <datalist id="manual-city-options">
+                    <option value="الرياض، السعودية" data-lat="24.7136" data-lon="46.6753"></option><option value="مكة المكرمة، السعودية" data-lat="21.3891" data-lon="39.8579"></option><option value="المدينة المنورة، السعودية" data-lat="24.5247" data-lon="39.5692"></option><option value="جدة، السعودية" data-lat="21.4858" data-lon="39.1925"></option><option value="الدمام، السعودية" data-lat="26.4207" data-lon="50.0888"></option><option value="الطائف، السعودية" data-lat="21.2703" data-lon="40.4158"></option><option value="أبها، السعودية" data-lat="18.2164" data-lon="42.5053"></option>
+                    <option value="دبي، الإمارات" data-lat="25.2048" data-lon="55.2708"></option><option value="أبوظبي، الإمارات" data-lat="24.4539" data-lon="54.3773"></option><option value="الدوحة، قطر" data-lat="25.2854" data-lon="51.5310"></option><option value="مدينة الكويت، الكويت" data-lat="29.3759" data-lon="47.9774"></option><option value="المنامة، البحرين" data-lat="26.2285" data-lon="50.5860"></option><option value="مسقط، عُمان" data-lat="23.5880" data-lon="58.3829"></option>
+                    <option value="القاهرة، مصر" data-lat="30.0444" data-lon="31.2357"></option><option value="الإسكندرية، مصر" data-lat="31.2001" data-lon="29.9187"></option><option value="عمّان، الأردن" data-lat="31.9539" data-lon="35.9106"></option><option value="القدس، فلسطين" data-lat="31.7683" data-lon="35.2137"></option><option value="بيروت، لبنان" data-lat="33.8938" data-lon="35.5018"></option><option value="دمشق، سوريا" data-lat="33.5138" data-lon="36.2765"></option><option value="بغداد، العراق" data-lat="33.3152" data-lon="44.3661"></option>
+                    <option value="إسطنبول، تركيا" data-lat="41.0082" data-lon="28.9784"></option><option value="تونس، تونس" data-lat="36.8065" data-lon="10.1815"></option><option value="الجزائر العاصمة، الجزائر" data-lat="36.7538" data-lon="3.0588"></option><option value="الرباط، المغرب" data-lat="34.0209" data-lon="-6.8416"></option><option value="الخرطوم، السودان" data-lat="15.5007" data-lon="32.5599"></option><option value="صنعاء، اليمن" data-lat="15.3694" data-lon="44.1910"></option>
+                    <option value="لندن، بريطانيا" data-lat="51.5072" data-lon="-0.1276"></option><option value="باريس، فرنسا" data-lat="48.8566" data-lon="2.3522"></option><option value="نيويورك، الولايات المتحدة" data-lat="40.7128" data-lon="-74.0060"></option><option value="تورونتو، كندا" data-lat="43.6532" data-lon="-79.3832"></option><option value="كراتشي، باكستان" data-lat="24.8607" data-lon="67.0011"></option><option value="دلهي، الهند" data-lat="28.6139" data-lon="77.2090"></option><option value="جاكرتا، إندونيسيا" data-lat="-6.2088" data-lon="106.8456"></option><option value="كوالالمبور، ماليزيا" data-lat="3.1390" data-lon="101.6869"></option>
+                </datalist>
+                <small style="flex:1 0 100%;color:#cbd6e1;font-size:0.75rem;">اختيار مدينة من القائمة يملأ إحداثيات مركزها تقريبياً؛ ويمكنك تعديلها أو إدخال إحداثيات أي مدينة أخرى.</small>
             </div>
 
             <div style="display:flex; gap:8px; margin-top:12px;">

@@ -1,4 +1,4 @@
-# Zad Al-Muslim v4.9.3-beta.5.1 — Final Android Build Instructions
+# Zad Al-Muslim v4.9.3-beta.5.2 — Final Android Build Instructions
 
 This package contains the generated Capacitor Android project and the synchronized web assets.
 
@@ -9,8 +9,6 @@ Install Node.js 22, JDK 21 **with `javac`**, Android SDK Platform 35, Android SD
 ```bash
 npm ci --ignore-scripts --no-audit --no-fund
 npm run audit:release
-npm run android:add
-npm run android:sync
 npm run android:debug
 ```
 
@@ -30,8 +28,8 @@ apksigner verify --verbose app/build/outputs/apk/release/app-release.apk
 
 Then run the real-device test matrix in `ANDROID_TEST_PLAN.md`, including update-over-existing-install and data-retention checks, before publishing.
 
-## Current session result
+## Current Beta 5.2 status
 
-The source and Capacitor synchronization checks passed. JDK 21, Android SDK Platform 35, Build Tools 35.0.0, and Platform Tools were installed. `./gradlew lint assembleDebug` passed, and both signed Release APK and AAB were produced. `apksigner verify --verbose` confirmed the APK's v1 and v2 signatures.
+The Beta 5.2 source audit and Capacitor synchronization are maintained with this release. Record each Android lint/build/signature result in the release verification report only after it runs in the current environment. Do not mark signed Release APK/AAB as passing until the existing upload key has been restored outside the repository and signature verification succeeds.
 
-The signed keystore and password remain outside the project and are not included in the source ZIP, GitHub, or Google Drive upload. A real Android device was unavailable, so installation/update, background audio, lock screen, sharing, MP4 codec output, and offline-device tests remain **NOT RUN**.
+The Beta 5.1 signing key was not present in this workspace or source archive when Beta 5.2 work began. Never create a replacement key for an update release; it would not match the installed Beta 5.1 app. Device installation/update, background audio, lock-screen controls, native video save/share, location permission states, and offline-device tests require a connected Android device and must be reported as **NOT RUN** until tested.
