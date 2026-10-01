@@ -89,7 +89,7 @@
             </div>
             <div class="progress-bar quran-progress"><div class="progress-fill" style="width:${percent}%"></div></div>
             <div class="quran-tools">
-                <label class="quran-search"><i class="fas fa-magnifying-glass"></i><input id="surah-search" type="search" placeholder="ابحث باسم السورة أو رقمها" value="${escapeHtml(filter)}" oninput="filterSurahs(this.value)"></label>
+                <label class="quran-search"><i class="fas fa-magnifying-glass"></i><input id="surah-search" dir="rtl" type="search" placeholder="ابحث باسم السورة أو رقمها" value="${escapeHtml(filter)}" oninput="filterSurahs(this.value)"></label>
                 <button onclick="showQuranBookmarks()" title="العلامات"><i class="fas fa-bookmark"></i></button>
                 <button onclick="showQuranTextSearch()" title="البحث في الآيات"><i class="fas fa-align-right"></i></button>
             </div>
@@ -211,7 +211,7 @@
     function showQuranTextSearch() {
         const content = document.getElementById('page-content');
         content.innerHTML = `<div class="reader-toolbar"><button onclick="renderQuranHome()"><i class="fas fa-arrow-right"></i><span>القرآن</span></button><div><strong>البحث في القرآن</strong><small>ابحث في نص الآيات</small></div><span></span></div>
-            <label class="quran-search quran-text-search"><i class="fas fa-magnifying-glass"></i><input id="ayah-search" type="search" minlength="2" placeholder="اكتب كلمتين أو أكثر" oninput="searchQuranText(this.value)"></label>
+            <label class="quran-search quran-text-search"><i class="fas fa-magnifying-glass"></i><input id="ayah-search" dir="rtl" type="search" minlength="2" placeholder="اكتب كلمتين أو أكثر" oninput="searchQuranText(this.value)"></label>
             <div id="quran-search-results" class="search-results"><div class="quran-empty">اكتب كلمة للبحث في 6236 آية.</div></div>`;
         document.getElementById('ayah-search')?.focus();
     }
