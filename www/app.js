@@ -1525,7 +1525,7 @@ function renderMore() {
         ['fa-palette', 'المظهر', 'اختيار الألوان ووضع القراءة', "loadTab('themes')"],
         ['fa-user-gear', 'الإعدادات', 'التنبيهات والبيانات والخصوصية', "loadTab('settings')"],
         ['fa-download', 'التنزيلات', 'إدارة التلاوات المحفوظة', 'renderAudioDownloads()'],
-        ['fa-mobile-screen-button', 'تطبيق Android', '4.9.3-beta.5.1 — إصلاحات الاستقرار والتحديث', "window.open('https://github.com/kingstoty-cyber/Zad-al-Muslim/releases/latest','_blank','noopener')"]
+        ['fa-mobile-screen-button', 'تطبيق Android', '4.9.3-beta.5.1 — إصلاحات الاستقرار والتحديث', "window.open('https://github.com/kingstoty-cyber/Zad-al-Muslim/releases/download/v4.9.3-beta.5.1/Zad-Al-Muslim-v4.9.3-beta.5.1-release.apk','_blank','noopener')"]
     ];
     content.innerHTML = `
         <div class="simple-page-heading">

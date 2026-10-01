@@ -20,6 +20,7 @@
 - `package-lock.json` — refreshed by the required `npm install`; dependency audit returned zero production vulnerabilities.
 
 - `.gitignore` — stopped ignoring the generated Android/www directories so the final rebuildable source can carry them; Android-specific build/cache/local files remain ignored.
+- `app.js`, `simplification.js` — changed Android download links to the signed Beta 5.1 APK asset instead of the generic Releases page.
 
 ## Intentionally not changed
 

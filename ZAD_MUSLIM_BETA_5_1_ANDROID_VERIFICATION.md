@@ -48,6 +48,7 @@
 | MP4 H.264 + AAC verification | NOT RUN | No device export was available; web code truthfully falls back to WebM when MP4 is unsupported |
 | Offline test with network disabled | NOT RUN | Browser/Android network isolation and downloaded-audio retention were not exercised here |
 | External reciter HTTP/audio validation | NOT RUN | Requires network matrix testing against remote audio endpoints |
+| Android download link | PASS | Rebuilt APK embeds the direct signed Beta 5.1 APK asset URL. |
 | GitHub tag/release publication | PASS | Tag `v4.9.3-beta.5.1` and Release published at https://github.com/kingstoty-cyber/Zad-al-Muslim/releases/tag/v4.9.3-beta.5.1 with signed APK, AAB, source ZIP, and checksums. |
 | Google Drive upload | PASS | Final source, reports, checksums, APK, and AAB were uploaded to the existing final folder and verified nonzero. |
 
@@ -74,6 +75,6 @@
 
 ## Android artifact hashes
 
-- Debug APK: `7a1f0363189d396f1ff991a07761cfc4b212f3846c9460c81ff28746d04241d9`
-- Release APK: `eb95576ded222cd82cb6e57e1bff6d14e87e06dd483a94ea10bf48fe8b46b5cc`
-- Release AAB: `fc0125172826d3ff6aa428c1512de1ff334a6e72d8e547fb1a78fe78d4e3a11b`
+- Debug APK: `ec47db92d7fafcb780dd068b8aadc1893c25612c3af0de075a39a16d27e387d5`
+- Release APK: `d5292457ba7538a33e47ffc7e204a9ee8cdcce7a69b43d250bed7f34dad8545f`
+- Release AAB: `ee824c85a66bde65284d1f698347c2dd7fe2c62b1e0ebbef089575345d3f0b12`
