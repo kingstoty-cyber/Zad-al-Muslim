@@ -1449,7 +1449,7 @@ function renderSettings() {
 
         <div class="card">
             <div class="card-title"><i class="fas fa-circle-info"></i> حول التطبيق</div>
-            <p>تطبيق <span style="color: var(--primary-color)">زاد المسلم</span> - الإصدار ${window.ZAD_APP?.version || '4.9.3-beta.3'}</p>
+            <p>تطبيق <span style="color: var(--primary-color)">زاد المسلم</span> - الإصدار ${window.ZAD_APP?.version || '4.9.3-beta.4'}</p>
             <p style="font-size: 0.9rem; line-height: 1.6;">
                 تطبيق متكامل لمتابعة العبادات اليومية، الأذكار، وقراءة القرآن الكريم.<br>
                 يعمل دون اتصال في القرآن والأذكار بعد التحميل الأول ويحفظ تقدمك محلياً.<br>
@@ -1525,7 +1525,7 @@ function renderMore() {
         ['fa-palette', 'المظهر', 'اختيار الألوان ووضع القراءة', "loadTab('themes')"],
         ['fa-user-gear', 'الإعدادات', 'التنبيهات والبيانات والخصوصية', "loadTab('settings')"],
         ['fa-download', 'التنزيلات', 'إدارة التلاوات المحفوظة', 'renderAudioDownloads()'],
-        ['fa-mobile-screen-button', 'تطبيق Android', 'v4.9.3-beta.3 — APK وAAB عند اكتمال البناء', "window.open('https://github.com/kingstoty-cyber/Zad-al-Muslim/releases/latest','_blank','noopener')"]
+        ['fa-mobile-screen-button', 'تطبيق Android', 'v4.9.3-beta.4 — APK وAAB عند اكتمال البناء', "window.open('https://github.com/kingstoty-cyber/Zad-al-Muslim/releases/latest','_blank','noopener')"]
     ];
     content.innerHTML = `
         <div class="simple-page-heading">
@@ -1572,19 +1572,7 @@ function loadTab(tabName) {
     window.scrollTo(0, 0);
 }
 
-function scrollToTop() {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-function handleScroll() {
-    const scrollTopBtn = document.getElementById('scrollTop');
-    if (!scrollTopBtn) return;
-    if (window.scrollY > 300) {
-        scrollTopBtn.classList.add('visible');
-    } else {
-        scrollTopBtn.classList.remove('visible');
-    }
-}
+function scrollToTop() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
 
 // ========== تهيئة التطبيق (تعديل خفيف) ==========
 
@@ -1662,15 +1650,11 @@ window.onload = async () => {
     // 11. إعداد أحداث التنقل
     document.querySelectorAll('.nav-item').forEach(item => {
         item.addEventListener('click', () => {
-            loadTab(item.dataset.tab);
+            const tab = item.dataset.tab;
+            if (AppState.currentTab === tab) { scrollToTop(); return; }
+            loadTab(tab);
         });
     });
-    
-    // 12. إعداد حدث زر العودة للأعلى
-    const scrollTopBtn = document.getElementById('scrollTop');
-    if (scrollTopBtn) {
-        scrollTopBtn.addEventListener('click', scrollToTop);
-    }
 };
 
 // تصدير الدوال للاستخدام العام (أضفت دوال الموقع اليدوي لاستخدامها من الواجهة)
