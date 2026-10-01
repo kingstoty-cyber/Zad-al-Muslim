@@ -48,7 +48,7 @@
 | MP4 H.264 + AAC verification | NOT RUN | No device export was available; web code truthfully falls back to WebM when MP4 is unsupported |
 | Offline test with network disabled | NOT RUN | Browser/Android network isolation and downloaded-audio retention were not exercised here |
 | External reciter HTTP/audio validation | NOT RUN | Requires network matrix testing against remote audio endpoints |
-| GitHub tag/release publication | NOT RUN | Repository is accessible and existing releases were inspected, but no tag/release was published in this run. |
+| GitHub tag/release publication | PASS | Tag `v4.9.3-beta.5.1` and Release published at https://github.com/kingstoty-cyber/Zad-al-Muslim/releases/tag/v4.9.3-beta.5.1 with signed APK, AAB, source ZIP, and checksums. |
 | Google Drive upload | PASS | Final source, reports, checksums, APK, and AAB were uploaded to the existing final folder and verified nonzero. |
 
 ## Fixes made
@@ -66,6 +66,11 @@
 - Release signing requires a keystore kept outside the source archive and GitHub secrets configured in the repository.
 - The final source archive intentionally excludes `node_modules`, Gradle caches, build outputs, local.properties, and signing secrets.
 - The signed APK/AAB use a locally generated release keystore kept outside the project; the keystore and password were not uploaded.
+
+## Publication
+
+- GitHub Release: https://github.com/kingstoty-cyber/Zad-al-Muslim/releases/tag/v4.9.3-beta.5.1
+- Google Drive folder: https://drive.google.com/drive/folders/1HaXI5O4ZvbVqSMuCyWpDMYpJEk-I7pGH
 
 ## Android artifact hashes
 
