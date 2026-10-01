@@ -11,7 +11,7 @@
 
   function push(state){if(restoring)return;const current=history.state||{};if(JSON.stringify(current)===JSON.stringify(state))return;history.pushState(state,'',`#${state.view||state.tab||'home'}`)}
   const baseLoadTab=window.loadTab;
-  window.loadTab=function(tab){baseLoadTab(tab);push({view:'tab',tab})};
+  window.loadTab=function(tab){window.stopQuranVideoPreview?.();baseLoadTab(tab);push({view:'tab',tab})};
   const baseOpenSurah=window.openSurah;
   window.openSurah=function(surah,ayah=1){baseOpenSurah(surah,ayah);push({view:'surah',surah:Number(surah),ayah:Number(ayah)||1})};
   const baseOpenAudio=window.openAudioReciter;
