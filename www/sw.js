@@ -1,8 +1,8 @@
-const CACHE_NAME = 'zad-al-muslim-v4-9-3-beta-5-2-r1';
+const CACHE_NAME = 'zad-al-muslim-v4-9-3-beta-5-2-ui1';
 const AUDIO_CACHE = 'zad-quran-audio-v45';
 const SURAH_AUDIO_CACHE = 'zad-quran-surah-audio-v461';
 const APP_ASSETS = [
-  './', './index.html', './offline.html', './privacy.html', './styles.css', './config.js', './supabase-counter.js', './data.js', './app.js', './quran.js', './prayer.js', './enhancements.js', './quran-features.js', './quran-audio.js', './surah-audio.js', './quran-library.js', './audio-downloads.js', './quran-v48.js', './quran-video.js', './app-shell.js', './native-bridge.js', './simplification.js',
+  './', './index.html', './offline.html', './privacy.html', './styles.css', './home-refresh.css', './config.js', './supabase-counter.js', './data.js', './app.js', './quran.js', './prayer.js', './enhancements.js', './quran-features.js', './quran-audio.js', './surah-audio.js', './quran-library.js', './audio-downloads.js', './quran-v48.js', './quran-video.js', './app-shell.js', './native-bridge.js', './simplification.js', './home-refresh.js',
   './assets/css/fontawesome.min.css', './assets/css/local-fonts.css',
   './assets/webfonts/fa-solid-900.woff2', './assets/webfonts/fa-regular-400.woff2',
   './assets/fonts/amiri.ttf', './assets/fonts/tajawal-300.ttf', './assets/fonts/tajawal-500.ttf', './assets/fonts/tajawal-800.ttf',

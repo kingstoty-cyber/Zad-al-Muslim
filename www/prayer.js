@@ -92,6 +92,12 @@
         if (settingsButton) settingsButton.hidden = !showSettings;
     }
 
+    function renderHomeView() {
+        const renderer = window.renderHome;
+        if (typeof renderer === 'function' && renderer !== renderHomeV42) renderer();
+        else renderHomeV42();
+    }
+
     async function requestPrayerLocation() {
         const button = document.getElementById('prayer-use-location');
         if (button?.disabled) return;
@@ -101,7 +107,7 @@
             const loc = await gpsLocation();
             setLocationFeedback('تم تحديد الموقع. جارٍ تحديث مواقيت الصلاة…');
             await fetchTimes(loc, true);
-            renderHomeV42();
+            renderHomeView();
             setLocationFeedback('تم تحديد الموقع وتحديث مواقيت الصلاة بنجاح.');
         } catch (error) {
             const webPermissionDenied = error?.code === 1;
@@ -148,12 +154,12 @@
         let loc = currentLocation();
         try {
             if (!loc) throw new Error('حدد موقعك يدويًا أو اضغط «استخدام موقعي» أولًا.');
-            await fetchTimes(loc, force); if (AppState.currentTab === 'home') renderHomeV42(); return true;
+            await fetchTimes(loc, force); if (AppState.currentTab === 'home') renderHomeView(); return true;
         }
         catch (error) {
             const cached = safeJSON(CACHE_KEY);
             const samePlace = !loc || (Math.abs(Number(cached?.lat) - Number(loc.lat)) < .02 && Math.abs(Number(cached?.lon) - Number(loc.lon)) < .02);
-            if (cached?.times && samePlace) { cached.stale = true; applyTimes(cached.times); if (AppState.currentTab === 'home') renderHomeV42(); }
+            if (cached?.times && samePlace) { cached.stale = true; applyTimes(cached.times); if (AppState.currentTab === 'home') renderHomeView(); }
             else if (loc) PrayerTimes = prayerMap.map(([name]) => ({ name, time: '--:--' }));
             throw error;
         }
@@ -164,7 +170,7 @@
         try { await updatePrayerTimesV42(true); message = 'تم تحديث المواقيت من المصدر بنجاح.'; }
         catch (e) { message = `${e.message}\nسيستمر عرض آخر مواقيت موثوقة إن كانت محفوظة.`; }
         finally {
-            if (AppState.currentTab === 'home') renderHomeV42();
+            if (AppState.currentTab === 'home') renderHomeView();
             setLocationFeedback(message);
         }
     }
