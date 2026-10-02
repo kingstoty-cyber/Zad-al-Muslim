@@ -1,36 +1,25 @@
-# تقرير بناء Android — UI2 Beta 5.2
+# تقرير بناء Android — UI2 المصحح
 
 - **الفرع:** `ui2/v4.9.3-beta.5.2-conservative`
-- **Commit البناء:** `ff2d0fff61e48408f7405baad3fda1cda91bff79`
-- **Workflow:** [36987762666](https://github.com/kingstoty-cyber/Zad-al-Muslim/actions/runs/36987762666)
+- **Commit المصدر المبني:** `b635039be2495c6019bfd2b58a875fee106f0e8e`
+- **Workflow:** [36989902308](https://github.com/kingstoty-cyber/Zad-al-Muslim/actions/runs/36989902308)
 - **النتيجة:** SUCCESS
-- **نوع الناتج:** Debug APK
-- **اسم الملف:** `Zad-al-Muslim-v4.9.3-beta.5.2-ui2-debug.apk`
-- **SHA-256:** `dc70078ac1b0a3e64231486c4397e2e328f718b934a6c02471667bd3d538ad82`
+- **الناتج:** Debug APK
 
-## الاختبارات السحابية
+## الاختبارات
 
-- Capacitor sync: PASS
-- Android unit tests: PASS
-- `assembleDebug`: PASS
-- Upload artifact: PASS
-- Signed Release APK/AAB: لم يُشغّل لأن Secrets التوقيع غير متاحة، ولم يتم إنشاء Release رسمي.
-- REAL DEVICE: NOT RUN
+| الاختبار | النتيجة |
+|---|---|
+| Capacitor sync | PASS |
+| Android unit tests | PASS |
+| Android Lint | PASS |
+| `assembleDebug` | PASS |
+| Upload debug artifact | PASS |
+| Signed Release APK/AAB | لم يُشغّل؛ لا تتوفر أسرار التوقيع |
+| هاتف Android حقيقي | NOT RUN |
 
 ## فحص APK الفعلي
 
-تم استخراج Manifest المضمّن داخل APK والتحقق من:
+أكد فحص Manifest المضمّن داخل الـAPK أن Package ID هو `ly.zadalmuslim.app`، والإصدار `4.9.3-beta.5.2`، وVersion Code هو `493052`، و`minSdk=23` و`targetSdk=35`. الصلاحيات المضمّنة هي الإنترنت والموقع التقريبي/الدقيق والإشعارات، إضافة إلى `RECEIVE_BOOT_COMPLETED` و`WAKE_LOCK` اللتين تضيفهما إضافة التنبيهات. لم تظهر صلاحيات كاميرا أو ميكروفون أو جهات اتصال أو تخزين عام.
 
-- Package ID: `ly.zadalmuslim.app`
-- Version name: `4.9.3-beta.5.2`
-- Version code: `493052`
-- الصلاحيات:
-  - `android.permission.INTERNET`
-  - `android.permission.ACCESS_COARSE_LOCATION`
-  - `android.permission.ACCESS_FINE_LOCATION`
-  - `android.permission.POST_NOTIFICATIONS`
-  - `android.permission.RECEIVE_BOOT_COMPLETED`
-  - `android.permission.WAKE_LOCK`
-  - صلاحية داخلية تلقائية: `ly.zadalmuslim.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`
-
-لم تظهر صلاحيات كاميرا أو ميكروفون أو جهات اتصال أو `MANAGE_EXTERNAL_STORAGE` أو صلاحيات التخزين القديمة.
+الـAPK Debug صالح، لكنه موقّع بمفتاح Android Debug. لا يمكن تثبيته فوق نسخة Release موقعة بمفتاح مختلف؛ يجب حذف النسخة القديمة أو توفير Keystore Release الأصلي لبناء تحديث يحافظ على بيانات التطبيق.
