@@ -10,7 +10,7 @@
         3: 'رابطة العالم الإسلامي', 5: 'الهيئة المصرية العامة للمساحة',
         4: 'جامعة أم القرى – مكة', 18: 'تونس', 19: 'الجزائر', 21: 'المغرب'
     };
-    const DEFAULTS = { method: 3, school: 0, timeFormat: '24', reminderMinutes: 10, iqamaMinutes: 15, offsets: { fajr: 0, sunrise: 0, dhuhr: 0, asr: 0, maghrib: 0, isha: 0 } };
+    const DEFAULTS = { method: 3, school: 0, timeFormat: '24', reminderMinutes: 10, iqamaMinutes: 15, prayerAlerts: {}, iqamaByPrayer: {}, offsets: { fajr: 0, sunrise: 0, dhuhr: 0, asr: 0, maghrib: 0, isha: 0 } };
     const prayerMap = [
         ['الفجر', 'fajr'], ['الشروق', 'sunrise'], ['الظهر', 'dhuhr'],
         ['العصر', 'asr'], ['المغرب', 'maghrib'], ['العشاء', 'isha']
@@ -23,7 +23,7 @@
     function escapeHTML(value) { return String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char])); }
     function settings() {
         const saved = safeJSON(SETTINGS_KEY) || {};
-        return { ...DEFAULTS, ...saved, offsets: { ...DEFAULTS.offsets, ...(saved.offsets || {}) } };
+        return { ...DEFAULTS, ...saved, prayerAlerts: {...(saved.prayerAlerts||{})}, iqamaByPrayer:{...(saved.iqamaByPrayer||{})}, offsets: { ...DEFAULTS.offsets, ...(saved.offsets || {}) } };
     }
     function saveSettings(next) { localStorage.setItem(SETTINGS_KEY, JSON.stringify(next)); }
     function cleanTime(value) { return String(value || '').match(/\d{1,2}:\d{2}/)?.[0]?.padStart(5, '0') || '--:--'; }
@@ -285,17 +285,16 @@
           <label>تنسيق الوقت<select id="prayer-time-format"><option value="24" ${s.timeFormat==='24'?'selected':''}>24 ساعة — 17:30</option><option value="12" ${s.timeFormat==='12'?'selected':''}>12 ساعة — 5:30 م</option></select></label>
           <div class="card-title"><i class="fas fa-location-dot"></i> الموقع</div>
           <div class="prayer-actions"><button id="prayer-use-location" class="btn-primary" onclick="requestPrayerLocation()"><i class="fas fa-location-crosshairs"></i> جلب موقعي تلقائيًا</button><button class="btn-primary" onclick="document.getElementById('manual-toggle')?.click()"><i class="fas fa-city"></i> اختيار المدينة يدويًا</button></div>
-          <p id="location-feedback" class="accuracy-note" role="status"></p><button id="open-location-settings" class="btn-secondary" onclick="openLocationAppSettings()" hidden>فتح إعدادات التطبيق</button>
-          <label>التذكير قبل الأذان<input type="number" id="prayer-reminder-minutes" min="0" max="60" value="${Number(s.reminderMinutes ?? 10)}"><small>دقيقة</small></label>
-          <label>وقت الإقامة بعد الأذان<input type="number" id="prayer-iqama-minutes" min="0" max="60" value="${Number(s.iqamaMinutes ?? 15)}"><small>دقيقة</small></label>
+          <p id="location-feedback" class="accuracy-note" role="status">${(()=>{const c=safeJSON(CACHE_KEY);return c?.fetchedAt?'آخر تحديث للموقع والمواقيت: '+new Date(c.fetchedAt).toLocaleString('ar-LY'):'لم يتم تحديث الموقع بعد'})()}</p><button id="open-location-settings" class="btn-secondary" onclick="openLocationAppSettings()" hidden>فتح إعدادات التطبيق</button>
+          <label>التذكير الافتراضي قبل الأذان<select id="prayer-reminder-minutes">${[0,5,10,15,30].map(v=>`<option value="${v}" ${Number(s.reminderMinutes??10)===v?'selected':''}>${v===0?'بدون تذكير':v+' دقيقة'}</option>`).join('')}</select></label><div class="per-prayer-settings">${prayerMap.filter(([,k])=>k!=='sunrise').map(([n,k])=>`<div><label class="plan-check"><input type="checkbox" id="alert-${k}" ${s.prayerAlerts[k]!==false?'checked':''}> ${n}</label><label>قبل الأذان<select id="reminder-${k}">${[0,5,10,15,30].map(v=>`<option value="${v}" ${Number(s.prayerAlerts[k]?.minutes??s.reminderMinutes??10)===v?'selected':''}>${v} د</option>`).join('')}</select></label><label>الإقامة<input type="number" id="iqama-${k}" min="0" max="60" value="${Number(s.iqamaByPrayer[k]??s.iqamaMinutes??15)}"><small>دقيقة بعد الأذان</small></label></div>`).join('')}</div>
           <div class="offset-grid">${prayerMap.map(([n,k])=>`<label>${n}<input type="number" id="offset-${k}" min="-30" max="30" value="${s.offsets[k]||0}"><small>دقيقة</small></label>`).join('')}</div>
           <button class="btn-primary" onclick="savePrayerSettings()"><i class="fas fa-floppy-disk"></i> حفظ وتحديث المواقيت</button><p class="accuracy-note">اضبط الفروق فقط بعد مقارنة مواقيت التطبيق بجدول المسجد أو الجهة المعتمدة في مدينتك.</p>`;
         const anchor=first?.nextSibling||first;content.insertBefore(title,anchor);content.insertBefore(card,anchor);
         content.querySelectorAll('p').forEach(p=>{if(p.textContent.includes('الإصدار 4.1'))p.innerHTML=p.innerHTML.replace('الإصدار 4.1','الإصدار 4.2');});
     }
     async function savePrayerSettingsUI() {
-        const old=settings(), next={method:Number(document.getElementById('calc-method').value),school:Number(document.getElementById('asr-school').value),timeFormat:document.getElementById('prayer-time-format')?.value==='12'?'12':'24',reminderMinutes:Math.max(0,Math.min(60,Number(document.getElementById('prayer-reminder-minutes')?.value)||0)),iqamaMinutes:Math.max(0,Math.min(60,Number(document.getElementById('prayer-iqama-minutes')?.value)||0)),offsets:{}};
-        prayerMap.forEach(([,k])=>next.offsets[k]=Math.max(-30,Math.min(30,Number(document.getElementById(`offset-${k}`).value)||0)));
+        const old=settings(), next={method:Number(document.getElementById('calc-method').value),school:Number(document.getElementById('asr-school').value),timeFormat:document.getElementById('prayer-time-format')?.value==='12'?'12':'24',reminderMinutes:Math.max(0,Math.min(60,Number(document.getElementById('prayer-reminder-minutes')?.value)||0)),iqamaMinutes:Number(old.iqamaMinutes??15),prayerAlerts:{},iqamaByPrayer:{},offsets:{}};
+        prayerMap.forEach(([,k])=>{next.offsets[k]=Math.max(-30,Math.min(30,Number(document.getElementById(`offset-${k}`).value)||0));if(k!=='sunrise'){next.prayerAlerts[k]={enabled:!!document.getElementById(`alert-${k}`)?.checked,minutes:Math.max(0,Math.min(60,Number(document.getElementById(`reminder-${k}`)?.value)||0))};next.iqamaByPrayer[k]=Math.max(0,Math.min(60,Number(document.getElementById(`iqama-${k}`)?.value)||0));}});
         saveSettings(next); try { await updatePrayerTimesV42(true); await window.reschedulePrayerNotifications?.(); alert('تم حفظ الإعدادات وتحديث المواقيت والتنبيهات.'); } catch(e) { saveSettings(old); alert(`تعذر التحديث: ${e.message}\nأعيدت الإعدادات السابقة.`); } renderSettingsV42();
     }
     window.renderHome = renderHomeV42; window.renderSettings = renderSettingsV42; window.updatePrayerTimes = updatePrayerTimesV42;

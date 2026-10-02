@@ -95,7 +95,7 @@
         const nextLabel = document.getElementById('home-next-label');
         if (currentLabel) currentLabel.textContent = win.current?.name || 'حدد موقعك';
         if (nextLabel) nextLabel.textContent = win.next?.name || '--';
-        const iqamaMinutes = Math.max(0, Math.min(60, Number(loadStored('zad_prayer_v42_settings')?.iqamaMinutes ?? 15)));
+        const ps=loadStored('zad_prayer_v42_settings')||{}; const currentKey=win.current?.key||win.current?.id||''; const iqamaMinutes=Math.max(0,Math.min(60,Number(ps.iqamaByPrayer?.[currentKey]??ps.iqamaMinutes??15)));
         const iqamaAt = win.currentAt ? new Date(win.currentAt.getTime() + iqamaMinutes * 60000) : null;
         if (currentCount) {
             if (iqamaAt && now >= win.currentAt && now < iqamaAt) {

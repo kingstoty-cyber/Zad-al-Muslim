@@ -1254,3 +1254,6 @@ input[type="search"], input[type="text"], textarea { direction: rtl; text-align:
 input[type="search"]::placeholder, input[type="text"]::placeholder, textarea::placeholder { direction: rtl; text-align: right; }
 .ayah-actions { flex-wrap: wrap; }
 .ayah-actions button { min-width: 44px; min-height: 40px; touch-action: manipulation; }
+
+/* UI8/UI9 */
+.wird-days{border:1px solid var(--border-color,#2b5b48);border-radius:14px;padding:10px;margin:12px 0}.wird-days label{display:inline-flex;gap:6px;margin:6px 8px}.per-prayer-settings>div{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;align-items:end;padding:10px 0;border-bottom:1px solid var(--border-color,#2b5b48)}@media(max-width:520px){.per-prayer-settings>div{grid-template-columns:1fr 1fr}.per-prayer-settings>div label:last-child{grid-column:1/-1}}
