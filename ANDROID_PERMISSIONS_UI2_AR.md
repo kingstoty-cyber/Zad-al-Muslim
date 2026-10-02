@@ -21,4 +21,6 @@
 
 ## حالة التحقق
 
-تم فحص Manifest المصدر، وManifest إضافة Local Notifications، وملفات Android بعد `npx cap sync android`. لا يتوفر Android SDK في بيئة التدقيق الحالية؛ لذلك تعذر إنتاج APK محلي أو فحص Manifest المدمج داخل APK.
+تم فحص Manifest المصدر وManifest إضافة Local Notifications وملفات Android بعد `npx cap sync android`. كما نجح GitHub Actions في تشغيل اختبارات Gradle وبناء Debug APK. فحص Manifest المضمّن داخل APK أكد Package ID `ly.zadalmuslim.app` والصلاحيات المتوقعة: الإنترنت، الموقع التقريبي/الدقيق، الإشعارات، ومعهما `RECEIVE_BOOT_COMPLETED` و`WAKE_LOCK` اللذان تضيفهما إضافة التنبيهات. لم تظهر صلاحيات كاميرا أو ميكروفون أو جهات اتصال أو تخزين عام.
+
+لم يُنفذ Android Lint ولا اختبار هاتف Android حقيقي. كما لم يُنشأ Signed Release APK/AAB لعدم توفر أسرار التوقيع، وفق قرار عدم إنشاء Release رسمي قبل المراجعة.

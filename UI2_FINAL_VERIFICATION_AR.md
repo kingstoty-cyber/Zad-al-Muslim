@@ -16,11 +16,11 @@
 | `git diff --check` | PASS |
 | اختبار 360/390/412px | PASS — لا يوجد تجاوز أفقي، وBottom Navigation يحتوي خمسة تبويبات |
 | اختبار التبويبات الرئيسية | PASS — الرئيسية، القرآن، الأذكار، المسموع، المزيد تعرض محتواها |
-| Android Lint | NOT RUN/FAIL بسبب عدم وجود Android SDK و`ANDROID_HOME` |
-| `assembleDebug` | NOT RUN/FAIL لنفس سبب عدم وجود Android SDK |
-| فحص APK النهائي للأذونات | NOT RUN — لم يُنتج APK في البيئة |
+| Android Lint | NOT RUN — Workflow الحالي يشغّل اختبارات Gradle و`assembleDebug` فقط |
+| `assembleDebug` | PASS — GitHub Actions run 36987762666 |
+| فحص APK النهائي للأذونات | PASS — Package ID والصلاحيات فُحصت من Manifest المضمّن |
 | REAL DEVICE | NOT RUN — لا يوجد هاتف Android حقيقي متصل |
 
 ## حدود مهمة
 
-لا يمكن اعتبار Android Lint أو APK أو اختبار الجهاز PASS. يجب تشغيل Workflow البناء أو بيئة Android Studio مع SDK API 35، ثم فحص `app-debug.apk` الناتج بواسطة `apkanalyzer` أو `aapt dump badging`، وتثبيته على هاتف حقيقي لاختبار الأذونات والموقع والإشعارات والصوت والقفل والتنزيل والمشاركة.
+تم إنتاج Debug APK وفحصه فعليًا. يبقى Android Lint واختبار الجهاز الحقيقي غير منفذين، كما أن Signed Release APK/AAB لم يُنشأ لعدم توفر أسرار التوقيع ولعدم إنشاء Release رسمي قبل المراجعة.
