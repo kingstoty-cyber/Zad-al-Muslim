@@ -95,7 +95,17 @@
         const nextLabel = document.getElementById('home-next-label');
         if (currentLabel) currentLabel.textContent = win.current?.name || 'حدد موقعك';
         if (nextLabel) nextLabel.textContent = win.next?.name || '--';
-        if (currentCount) currentCount.textContent = win.next ? durationText(win.next.at - now) : '--:--:--';
+        const iqamaMinutes = Math.max(0, Math.min(60, Number(loadStored('zad_prayer_v42_settings')?.iqamaMinutes ?? 15)));
+        const iqamaAt = win.currentAt ? new Date(win.currentAt.getTime() + iqamaMinutes * 60000) : null;
+        if (currentCount) {
+            if (iqamaAt && now >= win.currentAt && now < iqamaAt) {
+                currentCount.textContent = durationText(iqamaAt - now);
+                currentCount.previousElementSibling.textContent = 'الإقامة بعد';
+            } else {
+                currentCount.textContent = win.next ? durationText(win.next.at - now) : '--:--:--';
+                currentCount.previousElementSibling.textContent = 'تنتهي بعد';
+            }
+        }
         if (nextCount) nextCount.textContent = win.next ? durationText(win.next.at - now) : '--:--:--';
     }
 
