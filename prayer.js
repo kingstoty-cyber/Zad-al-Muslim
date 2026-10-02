@@ -10,7 +10,7 @@
         3: 'رابطة العالم الإسلامي', 5: 'الهيئة المصرية العامة للمساحة',
         4: 'جامعة أم القرى – مكة', 18: 'تونس', 19: 'الجزائر', 21: 'المغرب'
     };
-    const DEFAULTS = { method: 3, school: 0, timeFormat: '24', offsets: { fajr: 0, sunrise: 0, dhuhr: 0, asr: 0, maghrib: 0, isha: 0 } };
+    const DEFAULTS = { method: 3, school: 0, timeFormat: '24', reminderMinutes: 10, iqamaMinutes: 15, offsets: { fajr: 0, sunrise: 0, dhuhr: 0, asr: 0, maghrib: 0, isha: 0 } };
     const prayerMap = [
         ['الفجر', 'fajr'], ['الشروق', 'sunrise'], ['الظهر', 'dhuhr'],
         ['العصر', 'asr'], ['المغرب', 'maghrib'], ['العشاء', 'isha']
@@ -283,13 +283,18 @@
           <label>طريقة الحساب<select id="calc-method">${Object.entries(METHODS).map(([id,n])=>`<option value="${id}" ${Number(s.method)===Number(id)?'selected':''}>${n}</option>`).join('')}</select></label>
           <label>مذهب العصر<select id="asr-school"><option value="0" ${Number(s.school)===0?'selected':''}>الشافعي / المالكي / الحنبلي</option><option value="1" ${Number(s.school)===1?'selected':''}>الحنفي</option></select></label>
           <label>تنسيق الوقت<select id="prayer-time-format"><option value="24" ${s.timeFormat==='24'?'selected':''}>24 ساعة — 17:30</option><option value="12" ${s.timeFormat==='12'?'selected':''}>12 ساعة — 5:30 م</option></select></label>
+          <div class="card-title"><i class="fas fa-location-dot"></i> الموقع</div>
+          <div class="prayer-actions"><button id="prayer-use-location" class="btn-primary" onclick="requestPrayerLocation()"><i class="fas fa-location-crosshairs"></i> جلب موقعي تلقائيًا</button><button class="btn-primary" onclick="document.getElementById('manual-toggle')?.click()"><i class="fas fa-city"></i> اختيار المدينة يدويًا</button></div>
+          <p id="location-feedback" class="accuracy-note" role="status"></p><button id="open-location-settings" class="btn-secondary" onclick="openLocationAppSettings()" hidden>فتح إعدادات التطبيق</button>
+          <label>التذكير قبل الأذان<input type="number" id="prayer-reminder-minutes" min="0" max="60" value="${Number(s.reminderMinutes ?? 10)}"><small>دقيقة</small></label>
+          <label>وقت الإقامة بعد الأذان<input type="number" id="prayer-iqama-minutes" min="0" max="60" value="${Number(s.iqamaMinutes ?? 15)}"><small>دقيقة</small></label>
           <div class="offset-grid">${prayerMap.map(([n,k])=>`<label>${n}<input type="number" id="offset-${k}" min="-30" max="30" value="${s.offsets[k]||0}"><small>دقيقة</small></label>`).join('')}</div>
           <button class="btn-primary" onclick="savePrayerSettings()"><i class="fas fa-floppy-disk"></i> حفظ وتحديث المواقيت</button><p class="accuracy-note">اضبط الفروق فقط بعد مقارنة مواقيت التطبيق بجدول المسجد أو الجهة المعتمدة في مدينتك.</p>`;
         const anchor=first?.nextSibling||first;content.insertBefore(title,anchor);content.insertBefore(card,anchor);
         content.querySelectorAll('p').forEach(p=>{if(p.textContent.includes('الإصدار 4.1'))p.innerHTML=p.innerHTML.replace('الإصدار 4.1','الإصدار 4.2');});
     }
     async function savePrayerSettingsUI() {
-        const old=settings(), next={method:Number(document.getElementById('calc-method').value),school:Number(document.getElementById('asr-school').value),timeFormat:document.getElementById('prayer-time-format')?.value==='12'?'12':'24',offsets:{}};
+        const old=settings(), next={method:Number(document.getElementById('calc-method').value),school:Number(document.getElementById('asr-school').value),timeFormat:document.getElementById('prayer-time-format')?.value==='12'?'12':'24',reminderMinutes:Math.max(0,Math.min(60,Number(document.getElementById('prayer-reminder-minutes')?.value)||0)),iqamaMinutes:Math.max(0,Math.min(60,Number(document.getElementById('prayer-iqama-minutes')?.value)||0)),offsets:{}};
         prayerMap.forEach(([,k])=>next.offsets[k]=Math.max(-30,Math.min(30,Number(document.getElementById(`offset-${k}`).value)||0)));
         saveSettings(next); try { await updatePrayerTimesV42(true); alert('تم حفظ الإعدادات وتحديث المواقيت.'); } catch(e) { saveSettings(old); alert(`تعذر التحديث: ${e.message}\nأعيدت الإعدادات السابقة.`); } renderSettingsV42();
     }

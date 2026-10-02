@@ -1,7 +1,5 @@
 /* Beta 5.2 UI refresh */
 #current-theme{display:none!important}
-#manual-toggle{position:absolute!important;left:12px;top:12px;margin:0!important;width:40px;height:40px;padding:0!important;border-radius:12px!important;font-size:0!important;display:grid!important;place-items:center!important}
-#manual-toggle i{font-size:1rem!important}
 .header-section{position:relative;padding:14px 16px 10px!important;min-height:auto!important}
 .header-section h1{font-size:1.35rem!important;margin:0!important}
 .header-section #current-date{font-size:.78rem;opacity:.68;margin:4px 0 0!important}
@@ -44,3 +42,17 @@
   .home-action span{font-size:.68rem}
   .home-prayers-mini span{font-size:.61rem}
 }
+
+
+/* UI4 prayer dashboard */
+#manual-toggle[hidden]{display:none!important}
+.header-settings-button{position:absolute;left:12px;top:12px;width:42px;height:42px;border:0;border-radius:13px;background:transparent;color:var(--primary-color);font-size:1.35rem;display:grid;place-items:center;cursor:pointer}
+.prayer-dashboard{position:relative;overflow:hidden;min-height:300px;padding:20px 14px 14px!important;background:linear-gradient(90deg,rgba(8,13,17,.30),rgba(8,13,17,.93) 58%),url('assets/images/prayer-mosque.png') left top/56% 66% no-repeat,var(--card-bg)!important;border-color:color-mix(in srgb,var(--primary-color) 42%,transparent)!important}
+.prayer-hero-main{min-height:155px;display:grid;grid-template-columns:1fr 1fr;direction:rtl;align-items:center}
+.prayer-current,.prayer-next{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-align:center;min-width:0}
+.prayer-next{border-right:1px solid rgba(255,255,255,.18)}
+.prayer-hero-main small{font-size:.76rem;opacity:.72}.prayer-hero-main strong{font-size:1.55rem}.prayer-hero-main span{font-size:.78rem;opacity:.7}.prayer-hero-main b{font-size:1.38rem;color:var(--primary-color);direction:ltr}
+.prayer-progress{height:6px;border-radius:99px;background:rgba(255,255,255,.11);overflow:hidden;margin:0 4px 10px}.prayer-progress span{display:block;width:38%;height:100%;border-radius:inherit;background:var(--primary-color)}
+.prayer-dashboard .home-location{text-align:right;margin:8px 4px 10px;font-size:.7rem}.prayer-dashboard .home-location .fa-circle-check{color:#2ecc71}
+.home-actions{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+@media(max-width:390px){.prayer-dashboard{min-height:280px;background-size:58% 62%!important}.prayer-hero-main{min-height:145px}.prayer-hero-main strong{font-size:1.35rem}.prayer-hero-main b{font-size:1.18rem}}

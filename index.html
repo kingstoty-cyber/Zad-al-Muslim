@@ -46,10 +46,11 @@
         <p id="current-date"></p>
         <div id="current-theme"></div>
 
-        <!-- زر سريع لفتح لوحة الإدخال اليدوي للموقع -->
-        <button id="manual-toggle" style="margin-top:8px;padding:6px 10px;border-radius:8px;border:none;background:#f6bd26;color:#000;cursor:pointer;">
-            <i class="fas fa-map-marker-alt"></i> تحديد الموقع يدوياً
+        <!-- زر الإعدادات السريع؛ اختيار الموقع اليدوي أصبح داخل الإعدادات -->
+        <button id="header-settings" class="header-settings-button" type="button" onclick="loadTab('settings')" aria-label="فتح الإعدادات">
+            <i class="fas fa-gear"></i>
         </button>
+        <button id="manual-toggle" type="button" hidden aria-hidden="true" tabindex="-1"></button>
     </div>
 
     <main class="main-content">

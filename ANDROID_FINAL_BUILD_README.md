@@ -1,30 +1,35 @@
-# Zad Al-Muslim v4.9.3-beta.5.2 UI3 — Android Build Instructions
+# Zad Al-Muslim v4.9.3-beta.5.2 — Final Android Build Instructions
 
-## Verified build
+This package contains the generated Capacitor Android project and the synchronized web assets.
 
-The UI3 source was built with JDK 21, Android SDK Platform 35, Gradle 8.11.1, and Capacitor 7. The following checks passed:
+## Local build prerequisites
+
+Install Node.js 22, JDK 21 **with `javac`**, Android SDK Platform 35, Android SDK Build-Tools, and accept the Android licenses. Set `JAVA_HOME` and `ANDROID_HOME`/`ANDROID_SDK_ROOT` before building.
 
 ```bash
-npm install --no-audit --no-fund
-npm run prepare:web
+npm ci --ignore-scripts --no-audit --no-fund
 npm run audit:release
-npx cap sync android
-cd android
-./gradlew lint assembleDebug assembleRelease bundleRelease
+npm run android:debug
 ```
 
-The Release APK and AAB were signed with the same local signing key used for Beta 5.1, kept outside the repository and delivery archives. The keystore and password must never be committed or uploaded.
+The debug APK will be at `android/app/build/outputs/apk/debug/app-debug.apk`.
 
-## Artifacts
+## Release signing
 
-- `Zad-Al-Muslim-v4.9.3-beta.5.2-debug.apk` — testing only
-- `Zad-Al-Muslim-v4.9.3-beta.5.2-release.apk` — signed update APK
-- `Zad-Al-Muslim-v4.9.3-beta.5.2-release.aab` — signed Play distribution bundle
+Keep the keystore outside this repository and configure signing through protected CI secrets or an external Gradle signing configuration. Never put the keystore, passwords, or secrets in this ZIP or Git history. After signing is configured:
 
-Package ID: `ly.zadalmuslim.app`  
-Version: `4.9.3-beta.5.2`  
-Version Code: `493052`
+```bash
+cd android
+./gradlew test
+./gradlew assembleRelease
+./gradlew bundleRelease
+apksigner verify --verbose app/build/outputs/apk/release/app-release.apk
+```
 
-## Device validation still required
+Then run the real-device test matrix in `ANDROID_TEST_PLAN.md`, including update-over-existing-install and data-retention checks, before publishing.
 
-A real Android device is still required for installing over Beta 5.1, confirming user-data preservation, granting/denying location permission, comparing city prayer times, saving video through MediaStore, testing Android Sharesheet behavior, background audio, lock-screen controls, offline behavior, and confirming produced video codecs.
+## Current Beta 5.2 status
+
+The Beta 5.2 source audit and Capacitor synchronization are maintained with this release. Record each Android lint/build/signature result in the release verification report only after it runs in the current environment. Do not mark signed Release APK/AAB as passing until the existing upload key has been restored outside the repository and signature verification succeeds.
+
+The Beta 5.1 signing key was not present in this workspace or source archive when Beta 5.2 work began. Never create a replacement key for an update release; it would not match the installed Beta 5.1 app. Device installation/update, background audio, lock-screen controls, native video save/share, location permission states, and offline-device tests require a connected Android device and must be reported as **NOT RUN** until tested.
