@@ -56,6 +56,13 @@ function setupManualLocationPanel() {
     const cityInput = document.getElementById('manual-city');
     if (!toggleBtn || !panel || !saveBtn || !clearBtn || !latInput || !lonInput || !cityInput) return;
 
+    cityInput.addEventListener('change', () => {
+        const city = [...document.querySelectorAll('#manual-city-options option')].find(option => option.value === cityInput.value);
+        if (!city) return;
+        latInput.value = city.dataset.lat || '';
+        lonInput.value = city.dataset.lon || '';
+    });
+
     const closePanel = () => { panel.style.display = 'none'; };
     toggleBtn.addEventListener('click', () => {
         const saved = getManualLocation();
@@ -84,7 +91,7 @@ function setupManualLocationPanel() {
     clearBtn.addEventListener('click', () => {
         if (!confirm('هل تريد إزالة الموقع اليدوي؟')) return;
         clearManualLocation();
-        alert('تمت إزالة الموقع اليدوي. سيُطلب GPS عند التحديث التالي، ولن تُعرض أوقات محلية تخمينية.');
+        alert('تمت إزالة الموقع اليدوي. يمكنك اختيار مدينة أخرى أو استخدام موقعي من صفحة الصلاة.');
         closePanel();
         window.renderHome?.();
     });
@@ -106,16 +113,14 @@ function loadCachedTimes() {
 // تحقق ما إذا كنا بحاجة لتحديث (مثلاً عند تغيير الموقع اليدوي)
 function needsUpdateForManualLocation() {
     const cached = loadCachedTimes();
-    const manual = getManualLocation();
+    let saved = null;
+    try { saved = getManualLocation() || JSON.parse(localStorage.getItem('user_location') || 'null'); } catch (_) {}
+    if (!saved) return false;
     if (!cached) return true;
     if (cached.date !== new Date().toDateString()) return true;
-    if (manual) {
-        const cachedLoc = cached.location || {};
-        const latDiff = Math.abs((cachedLoc.lat || 0) - manual.lat);
-        const lonDiff = Math.abs((cachedLoc.lon || 0) - manual.lon);
-        if (latDiff > 0.01 || lonDiff > 0.01) return true;
-    }
-    return false;
+    const cachedLoc = cached.location || {};
+    return Math.abs((cachedLoc.lat || 0) - Number(saved.lat)) > 0.01 ||
+        Math.abs((cachedLoc.lon || 0) - Number(saved.lon)) > 0.01;
 }
 
 // ========== الدوال الأساسية ==========
@@ -197,112 +202,16 @@ class PrayerTimesCalculator {
         return methods[this.method] || methods['UmmAlQura'];
     }
 
-    // دالة لتحديد الموقع عبر IP (بدون إذن)
-    async getLocationByIP() {
-        try {
-            console.log("جاري تحديد الموقع عبر IP...");
-            const response = await fetch('https://ipapi.co/json/');
-            const data = await response.json();
-            
-            if (data.latitude && data.longitude) {
-                this.latitude = data.latitude;
-                this.longitude = data.longitude;
-                
-                const locationData = {
-                    lat: this.latitude,
-                    lon: this.longitude,
-                    city: data.city,
-                    country: data.country_name,
-                    source: 'ip',
-                    timestamp: Date.now()
-                };
-                localStorage.setItem('user_location', JSON.stringify(locationData));
-                
-                console.log("تم تحديد الموقع عبر IP:", this.latitude, this.longitude, `(${data.city}, ${data.country_name})`);
-                return true;
-            }
-            return false;
-        } catch (error) {
-            console.log("فشل تحديد الموقع عبر IP:", error);
-            return false;
-        }
-    }
-
     // تعديل: استخدام الموقع اليدوي أولاً لتقليل التعقيد والمشكلات
     async getLocation() {
-        return new Promise(async (resolve, reject) => {
-            // 0) استخدام الموقع اليدوي إذا وُجد
-            const manual = getManualLocation();
-            if (manual) {
-                this.latitude = manual.lat;
-                this.longitude = manual.lon;
-                // حفظ نسخة في user_location لعرض المصدر في الواجهة
-                const locationData = {
-                    lat: this.latitude,
-                    lon: this.longitude,
-                    city: manual.city || null,
-                    source: 'manual',
-                    timestamp: Date.now()
-                };
-                localStorage.setItem('user_location', JSON.stringify(locationData));
-                console.log("استخدام الموقع اليدوي:", locationData);
-                resolve(true);
-                return;
-            }
-
-            // إن لم يكن هناك موقع يدوي: مثل سلوكك الأصلي (GPS ثم IP)
-            if (!navigator.geolocation) {
-                console.log("Geolocation غير مدعوم في هذا المتصفح");
-                const ipSuccess = await this.getLocationByIP();
-                resolve(ipSuccess);
-                return;
-            }
-
-            navigator.geolocation.getCurrentPosition(
-                async (position) => {
-                    this.latitude = position.coords.latitude;
-                    this.longitude = position.coords.longitude;
-                    
-                    const locationData = {
-                        lat: this.latitude,
-                        lon: this.longitude,
-                        source: 'gps',
-                        timestamp: Date.now()
-                    };
-                    localStorage.setItem('user_location', JSON.stringify(locationData));
-                    
-                    console.log("تم تحديد الموقع عبر GPS:", this.latitude, this.longitude);
-                    resolve(true);
-                },
-                async (error) => {
-                    console.log("خطأ في GPS:", error.message);
-                    
-                    // التحقق من الرسالة الخطأ
-                    let errorMsg = "خطأ غير معروف";
-                    switch(error.code) {
-                        case 1:
-                            errorMsg = "تم رفض إذن الموقع. جاري استخدام IP...";
-                            break;
-                        case 2:
-                            errorMsg = "لا يمكن الوصول إلى معلومات الموقع. جاري استخدام IP...";
-                            break;
-                        case 3:
-                            errorMsg = "انتهت المهلة. جاري استخدام IP...";
-                            break;
-                    }
-                    console.log(errorMsg);
-                    
-                    // استخدام IP كبديل
-                    const ipSuccess = await this.getLocationByIP();
-                    resolve(ipSuccess);
-                },
-                { 
-                    enableHighAccuracy: true, 
-                    timeout: 8000, 
-                    maximumAge: 0 
-                }
-            );
-        });
+        const saved = getManualLocation() || (() => {
+            try { return JSON.parse(localStorage.getItem('user_location') || 'null'); }
+            catch (_) { return null; }
+        })();
+        if (!saved || !Number.isFinite(Number(saved.lat)) || !Number.isFinite(Number(saved.lon))) return false;
+        this.latitude = Number(saved.lat);
+        this.longitude = Number(saved.lon);
+        return true;
     }
 
     // دالة لجلب مواقيت الصلاة من API
@@ -412,8 +321,7 @@ class PrayerTimesCalculator {
                 times = this.computePrayerTimes();
             }
         } else {
-            console.log("فشل تحديد الموقع، استخدام الأوقات المحسوبة محلياً");
-            times = this.computePrayerTimes();
+            throw new Error("حدد موقعك من واجهة الصلاة قبل تحديث المواقيت.");
         }
 
         const cacheData = {
@@ -463,30 +371,6 @@ async function updatePrayerTimes() {
         console.log("استخدام الأوقات الافتراضية:", error);
         return false;
     }
-}
-
-// ========== طلب إذن الموقع ==========
-
-async function requestLocationPermission() {
-    return new Promise((resolve, reject) => {
-        if (!navigator.geolocation) {
-            console.log("Geolocation غير مدعوم");
-            resolve(false);
-            return;
-        }
-        
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                console.log("تم منح إذن الموقع:", position.coords);
-                resolve(true);
-            },
-            (error) => {
-                console.log("تم رفض إذن الموقع:", error.message);
-                resolve(false);
-            },
-            { enableHighAccuracy: false, timeout: 5000 }
-        );
-    });
 }
 
 // دالة مع ردود فعل للتحديث (تم تعديلها لاستخدام الموقع اليدوي إن وُجد)
@@ -1449,7 +1333,7 @@ function renderSettings() {
 
         <div class="card">
             <div class="card-title"><i class="fas fa-circle-info"></i> حول التطبيق</div>
-            <p>تطبيق <span style="color: var(--primary-color)">زاد المسلم</span> - الإصدار ${window.ZAD_APP?.version || '4.9.3-beta.5.1'}</p>
+            <p>تطبيق <span style="color: var(--primary-color)">زاد المسلم</span> - الإصدار ${window.ZAD_APP?.version || '4.9.3-beta.5.2'}</p>
             <p style="font-size: 0.9rem; line-height: 1.6;">
                 تطبيق متكامل لمتابعة العبادات اليومية، الأذكار، وقراءة القرآن الكريم.<br>
                 يعمل دون اتصال في القرآن والأذكار بعد التحميل الأول ويحفظ تقدمك محلياً.<br>
@@ -1525,7 +1409,7 @@ function renderMore() {
         ['fa-palette', 'المظهر', 'اختيار الألوان ووضع القراءة', "loadTab('themes')"],
         ['fa-user-gear', 'الإعدادات', 'التنبيهات والبيانات والخصوصية', "loadTab('settings')"],
         ['fa-download', 'التنزيلات', 'إدارة التلاوات المحفوظة', 'renderAudioDownloads()'],
-        ['fa-mobile-screen-button', 'تطبيق Android', '4.9.3-beta.5.1 — إصلاحات الاستقرار والتحديث', "window.open('https://github.com/kingstoty-cyber/Zad-al-Muslim/releases/download/v4.9.3-beta.5.1/Zad-Al-Muslim-v4.9.3-beta.5.1-release.apk','_blank','noopener')"]
+        ['fa-mobile-screen-button', 'تطبيق Android', '4.9.3-beta.5.2 — إصلاحات الاستقرار والتحديث', "window.open('https://github.com/kingstoty-cyber/Zad-al-Muslim/releases/download/v4.9.3-beta.5.2/Zad-Al-Muslim-v4.9.3-beta.5.2-release.apk','_blank','noopener')"]
     ];
     content.innerHTML = `
         <div class="simple-page-heading">
@@ -1589,37 +1473,35 @@ window.onload = async () => {
     const themeEl = document.getElementById('current-theme');
     if (themeEl) themeEl.style.cssText = "font-size: 0.9rem; color: var(--primary-color); margin-top: 5px;";
     
-    // 4. تحميل مواقيت الصلاة عند التحميل فقط إذا احتجنا لذلك (تحديث يومي أو عند تغيير الموقع اليدوي)
+    // 4. تحميل المواقيت من موقع محفوظ مسبقًا فقط؛ لا نطلب إذنًا أو موقع IP عند بدء التطبيق.
     console.log("بدء تحميل التطبيق...");
     setTimeout(async () => {
         try {
-            if (needsUpdateForManualLocation()) {
-                console.log("جاري تحديث مواقيت الصلاة (مطالب بالتحديث)...");
-                await updatePrayerTimes();
+            let savedLocation = null;
+            try { savedLocation = getManualLocation() || JSON.parse(localStorage.getItem('user_location') || 'null'); } catch (_) {}
+            if (savedLocation && needsUpdateForManualLocation()) {
+                console.log("جاري تحديث مواقيت الصلاة لموقع محفوظ مسبقًا...");
+                await window.updatePrayerTimes?.();
             } else {
-                console.log("استخدام الكاش الحالي لمواقيت اليوم");
-                // تحميل الكاش إلى PrayerTimes لعرضها فوراً
+                console.log(savedLocation ? "استخدام الكاش الحالي لمواقيت اليوم" : "لم يُختر موقع بعد؛ الإذن لا يُطلب إلا بعد ضغط المستخدم");
                 const cached = loadCachedTimes();
-                if (cached && cached.times) {
-                    const times = cached.times;
+                if (cached?.times) {
                     PrayerTimes = [
-                        { name: "الفجر", time: times.fajr },
-                        { name: "الشروق", time: times.sunrise },
-                        { name: "الظهر", time: times.dhuhr },
-                        { name: "العصر", time: times.asr },
-                        { name: "المغرب", time: times.maghrib },
-                        { name: "العشاء", time: times.isha }
+                        { name: "الفجر", time: cached.times.fajr },
+                        { name: "الشروق", time: cached.times.sunrise },
+                        { name: "الظهر", time: cached.times.dhuhr },
+                        { name: "العصر", time: cached.times.asr },
+                        { name: "المغرب", time: cached.times.maghrib },
+                        { name: "العشاء", time: cached.times.isha }
                     ];
                 }
             }
             console.log("اكتمل تحميل التطبيق");
-        } catch (e) {
-            console.error("خطأ أثناء التحميل المبدئي:", e);
-        }
+        } catch (e) { console.error("خطأ أثناء التحميل المبدئي:", e); }
     }, 800);
     
     // 5. تحميل الصفحة الرئيسية
-    renderHome();
+    (window.renderHome || renderHome)();
     
     // 6. تحديث التاريخ كل دقيقة
     setInterval(() => {
@@ -1629,8 +1511,12 @@ window.onload = async () => {
     
     // 7. تحديث مواقيت الصلاة كل 6 ساعات (اختياري)
     setInterval(async () => {
-        console.log("تحديث دوري لمواقيت الصلاة...");
-        await updatePrayerTimes();
+        let savedLocation = null;
+        try { savedLocation = getManualLocation() || JSON.parse(localStorage.getItem('user_location') || 'null'); } catch (_) {}
+        if (savedLocation) {
+            console.log("تحديث دوري للمواقيت باستخدام موقع محفوظ مسبقًا...");
+            await window.updatePrayerTimes?.();
+        }
     }, 6 * 3600000);
     
     // 8. لا يوجد زر صعود عائم في Beta 5؛ لذلك لا نربط مستمع تمرير قديم.
