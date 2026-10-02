@@ -13,7 +13,9 @@
 | `npm run audit:release` | PASS |
 | `node --check` لملفات JavaScript | PASS |
 | `npx cap sync android` | PASS — اكتشف 7 إضافات Capacitor |
-| `git diff --check` | PASS عند توفر تاريخ Git |
+| `git diff --check` | PASS |
+| اختبار 360/390/412px | PASS — لا يوجد تجاوز أفقي، وBottom Navigation يحتوي خمسة تبويبات |
+| اختبار التبويبات الرئيسية | PASS — الرئيسية، القرآن، الأذكار، المسموع، المزيد تعرض محتواها |
 | Android Lint | NOT RUN/FAIL بسبب عدم وجود Android SDK و`ANDROID_HOME` |
 | `assembleDebug` | NOT RUN/FAIL لنفس سبب عدم وجود Android SDK |
 | فحص APK النهائي للأذونات | NOT RUN — لم يُنتج APK في البيئة |
