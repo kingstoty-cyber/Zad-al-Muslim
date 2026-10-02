@@ -111,6 +111,15 @@
         const savedPosition = lastRead();
         const lastText = savedPosition ? `سورة ${esc(savedPosition.surah || savedPosition.surahNumber || savedPosition.surahId || '')} • آية ${esc(savedPosition.ayah || savedPosition.ayahNumber || 1)}` : 'ابدأ القراءة وسيُحفظ موضعك';
         const prayerCards = times.filter(p => p.name !== 'الشروق').slice(0,5);
+        const reminder = window.getRandomReminder?.() || 'اذكر الله';
+        const wirdPlan = loadStored('zad_quran_wird_plan');
+        const todayKey = `${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}-${String(new Date().getDate()).padStart(2,'0')}`;
+        const wirdDone = !!(wirdPlan?.completedDates || []).includes(todayKey);
+        const wirdActive = !!wirdPlan?.active;
+        const wirdTitle = wirdActive ? (wirdDone ? 'تم إنجاز ورد اليوم' : 'ورد القرآن اليومي') : 'تذكير الحفظ والورد اليومي';
+        const wirdText = wirdActive ? (wirdDone ? 'تقبّل الله منك — يمكنك مراجعة الخطة أو متابعة الحفظ.' : 'وردك اليوم ما زال بانتظارك — افتحه الآن أو راجع خطة الختمة.') : 'أنشئ وردًا يوميًا للحفظ أو القراءة وحدد وقت التذكير المناسب لك.';
+        const wirdAction = wirdActive && !wirdDone ? 'openTodayWird()' : 'renderWirdPlanner()';
+        const wirdButton = wirdActive && !wirdDone ? 'ابدأ الورد' : (wirdActive ? 'عرض الخطة' : 'إعداد الورد');
         content.innerHTML = `<div class="home-v2">
           <section class="home-hero prayer-dashboard" aria-label="الصلاة والمواقيت">
             <div class="prayer-hero-main">
@@ -121,13 +130,13 @@
             <div class="home-location"><i class="fas fa-circle-check"></i> تم التحديث: ${esc(updatedText)} <i class="fas fa-location-dot"></i> ${esc(locationText)}</div>
             <div class="home-prayers-mini">${prayerCards.map(p=>`<div class="${p.name===win.current?.name?'current':''}"><b>${esc(p.name)}</b><span>${esc(p.time||'--:--')}</span></div>`).join('')}</div>
           </section>
-          <section class="home-actions" aria-label="اختصارات">
-            <button class="home-action" onclick="loadTab('quran')"><i class="fas fa-book-quran"></i><span>القرآن</span></button>
-            <button class="home-action" onclick="loadTab('adhkar')"><i class="fas fa-hands-praying"></i><span>الأذكار</span></button>
-            <button class="home-action" onclick="loadTab('audio-quran')"><i class="fas fa-headphones"></i><span>استماع</span></button>
+          <section class="home-wird-card" aria-label="الورد اليومي">
+            <div><small>${wirdActive ? 'متابعة يومية' : 'تذكير يومي'}</small><strong>${wirdTitle}</strong><p>${wirdText}</p></div>
+            <button onclick="${wirdAction}">${wirdButton}</button>
           </section>
           <section class="home-section"><div class="home-section-head"><strong>آخر قراءة</strong><button class="home-link" onclick="loadTab('quran')">المصحف</button></div><button class="home-continue" onclick="openHomeLastRead()"><i class="fas fa-bookmark"></i><div><strong>متابعة القراءة</strong><small>${lastText}</small></div><i class="fas fa-chevron-left"></i></button></section>
           ${ayah.text?`<section class="home-ayah"><p>${esc(ayah.text)}</p><small>${esc(ayah.reference||'')}</small></section>`:''}
+          <section class="home-dhikr-card" aria-label="ذكر اليوم"><small>ذكر اليوم</small><p>${esc(reminder)}</p></section>
         </div>`;
         refreshHomePrayerClock(); clearInterval(window.__homePrayerClock); window.__homePrayerClock=setInterval(refreshHomePrayerClock,1000);
     };
