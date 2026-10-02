@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zad-al-muslim-v4-9-3-beta-5-2-ui3';
+const CACHE_NAME = 'zad-al-muslim-v4-9-3-beta-5-2-ui5';
 const AUDIO_CACHE = 'zad-quran-audio-v45';
 const SURAH_AUDIO_CACHE = 'zad-quran-surah-audio-v461';
 const APP_ASSETS = [

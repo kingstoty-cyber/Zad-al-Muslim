@@ -296,7 +296,7 @@
     async function savePrayerSettingsUI() {
         const old=settings(), next={method:Number(document.getElementById('calc-method').value),school:Number(document.getElementById('asr-school').value),timeFormat:document.getElementById('prayer-time-format')?.value==='12'?'12':'24',reminderMinutes:Math.max(0,Math.min(60,Number(document.getElementById('prayer-reminder-minutes')?.value)||0)),iqamaMinutes:Math.max(0,Math.min(60,Number(document.getElementById('prayer-iqama-minutes')?.value)||0)),offsets:{}};
         prayerMap.forEach(([,k])=>next.offsets[k]=Math.max(-30,Math.min(30,Number(document.getElementById(`offset-${k}`).value)||0)));
-        saveSettings(next); try { await updatePrayerTimesV42(true); alert('تم حفظ الإعدادات وتحديث المواقيت.'); } catch(e) { saveSettings(old); alert(`تعذر التحديث: ${e.message}\nأعيدت الإعدادات السابقة.`); } renderSettingsV42();
+        saveSettings(next); try { await updatePrayerTimesV42(true); await window.reschedulePrayerNotifications?.(); alert('تم حفظ الإعدادات وتحديث المواقيت والتنبيهات.'); } catch(e) { saveSettings(old); alert(`تعذر التحديث: ${e.message}\nأعيدت الإعدادات السابقة.`); } renderSettingsV42();
     }
     window.renderHome = renderHomeV42; window.renderSettings = renderSettingsV42; window.updatePrayerTimes = updatePrayerTimesV42;
     window.updatePrayerTimesWithFeedback = updateWithFeedback; window.renderQibla = renderQibla; window.startQiblaCompass = startCompass; window.savePrayerSettings = savePrayerSettingsUI;
