@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>تطبيق زاد المسلم v4.9.3 Beta 5.2</title>
     <meta name="theme-color" content="#0f5132">
     <meta name="description" content="زاد المسلم: القرآن الكريم والأذكار والمسبحة ومتابعة العبادات">
@@ -16,6 +16,8 @@
     <!-- ملفات التطبيق -->
     <link rel="stylesheet" href="styles.css?v=4.9.3-beta.5.2">
     <link rel="stylesheet" href="home-refresh.css?v=4.9.3-beta.5.2-ui1">
+    <link rel="stylesheet" href="ui2-polish.css?v=4.9.3-beta.5.2-ui2">
+    <link rel="stylesheet" href="ui3-enhance.css?v=4.9.3-beta.5.2-ui3">
     <script defer src="config.js?v=4.9.3-beta.5.2"></script>
     <script defer src="supabase-counter.js?v=4.9.3-beta.5.2"></script>
     <script defer src="data.js?v=4.9.3-beta.5.2"></script>
@@ -34,6 +36,7 @@
     <script defer src="native-bridge.js?v=4.9.3-beta.5.2"></script>
     <script defer src="simplification.js?v=4.9.3-beta.5.2"></script>
     <script defer src="home-refresh.js?v=4.9.3-beta.5.2-ui1"></script>
+    <script defer src="ui3-enhance.js?v=4.9.3-beta.5.2-ui3"></script>
 </head>
 <body id="app-body">
     <a class="skip-link" href="#page-content">تخطي إلى المحتوى</a>
@@ -54,24 +57,24 @@
     </main>
 
 
-    <nav class="bottom-nav">
-        <div class="nav-item active" data-tab="home">
+    <nav class="bottom-nav" role="navigation" aria-label="التنقل الرئيسي">
+        <div class="nav-item active" data-tab="home" role="button" tabindex="0" aria-label="الرئيسية">
             <i class="fas fa-home"></i>
             <span>الرئيسية</span>
         </div>
-        <div class="nav-item" data-tab="quran">
+        <div class="nav-item" data-tab="quran" role="button" tabindex="0" aria-label="القرآن">
             <i class="fas fa-book-quran"></i>
             <span>القرآن</span>
         </div>
-        <div class="nav-item" data-tab="adhkar">
+        <div class="nav-item" data-tab="adhkar" role="button" tabindex="0" aria-label="الأذكار">
             <i class="fas fa-hands-praying"></i>
             <span>الأذكار</span>
         </div>
-        <div class="nav-item" data-tab="audio-quran">
+        <div class="nav-item" data-tab="audio-quran" role="button" tabindex="0" aria-label="المسموع">
             <i class="fas fa-headphones"></i>
             <span>المسموع</span>
         </div>
-        <div class="nav-item" data-tab="more">
+        <div class="nav-item" data-tab="more" role="button" tabindex="0" aria-label="المزيد">
             <i class="fas fa-ellipsis"></i>
             <span>المزيد</span>
         </div>

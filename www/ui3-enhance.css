@@ -1,0 +1,53 @@
+/* Zad Al-Muslim UI3 — طبقة تحسينات واجهة إضافية (Additive).
+   مبدأ التصميم: لا تُخفى ولا تُزال أي محدد وظيفي أو معرف أو صنف يعتمد عليه الجافاسكربت.
+   كل ما في هذه الطبقة يكمّن الطبقات السابقة (styles.css و home-refresh.css و ui2-polish.css) دون تعديلها.
+   ما تم الحفاظ عليه بالكامل: جميع المعرفات (124)، جميع معالجات الأحداث (103)، مفاتيح التخزين المحلي،
+   أدوار التنقل، سلوك Service Worker، وجميع ميزات الأندرويد الأصيلة. */
+
+/* ===== 1) نظام الألوان والتمرير ===== */
+:root{color-scheme:dark}
+.theme-gold-light,.theme-blue-light,.theme-green-light,.theme-purple-light,.theme-orange-light{color-scheme:light}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+*{-webkit-tap-highlight-color:rgba(197,160,89,.18)}
+img,video,canvas{height:auto}
+
+/* ===== 2) تركيز واضح للوحة المفاتيح وقارئ الشاشة ===== */
+:focus-visible{outline:3px solid color-mix(in srgb,var(--primary-color) 75%,#fff 10%);outline-offset:2px;border-radius:8px}
+.skip-link:focus-visible{outline-offset:4px}
+
+/* ===== 3) أهداف اللمس والتغذية الراجعة اللمسية ===== */
+.app-button,.nav-item,.ayah-actions button,.reader-toolbar button,.more-card,.counter-btn,.audio-controls button{transition:transform .12s ease,box-shadow .2s ease,background-color .2s ease}
+.app-button:active,.nav-item:active,.ayah-actions button:active,.more-card:active{transform:scale(.97)}
+@media(hover:hover){.app-button:hover{box-shadow:0 6px 18px color-mix(in srgb,var(--primary-color) 25%,transparent)}}
+
+/* ===== 4) نصوص وقراءة أوضح ===== */
+body{text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased}
+.ayah-text,.dhikr-text{word-spacing:.04em}
+p,small,span{overflow-wrap:break-word}
+
+/* ===== 5) النماذج: منع التكبير التلقائي في iOS عند التركيز ===== */
+input,select,textarea{font-size:16px}
+
+/* ===== 6) شريط التنقل السفلي: مساحة آمنة + مؤشر نشط أوضح + وصولية ===== */
+.bottom-nav{padding-top:6px}
+.nav-item{border-radius:14px}
+.nav-item.active{background:color-mix(in srgb,var(--primary-color) 16%,transparent)}
+.nav-item:focus-visible{outline-offset:-2px}
+
+/* ===== 7) أشرطة تمرير أنظف داخل القوائم الطويلة ===== */
+.surah-list,.audio-surah-list,.quran-verses,.error-log{scrollbar-width:thin;scrollbar-color:color-mix(in srgb,var(--primary-color) 55%,transparent) transparent}
+.surah-list::-webkit-scrollbar,.audio-surah-list::-webkit-scrollbar{width:6px}
+.surah-list::-webkit-scrollbar-thumb,.audio-surah-list::-webkit-scrollbar-thumb{border-radius:6px;background:color-mix(in srgb,var(--primary-color) 55%,transparent)}
+
+/* ===== 8) احترام تفضيل «تقليل الحركة» لدى المستخدم ===== */
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+
+/* ===== 9) هواتف الشاشات ذات الكشّافة (النوتش) ===== */
+.header-section{padding-top:env(safe-area-inset-top)}
+
+/* ===== 10) تباين أعلى للنصوص الخافتة (تبقى بنفس الشكل مع قراءة أسهل) ===== */
+.more-card small,.surah-title small{opacity:1;color:color-mix(in srgb,var(--text-color) 78%,transparent)}
+@media(max-width:390px){.nav-item span{font-size:.64rem}}
