@@ -675,17 +675,33 @@ function renderAdhkar(category = 'azkari_1') {
     const progress=Storage.load('adhkar_progress')||{}, cp=getDhikrCategoryProgress(category,progress), current=importedCategories.find(c=>c.key===category)||{name:'الأذكار'};
     const featured=['azkari_1','azkari_2','azkari_4','azkari_5','azkari_6','azkari_11'];
     const featuredRows=importedCategories.filter(c=>featured.includes(c.key));
-    let html=`<section class="card adhkar-hub"><div class="card-title"><i class="fas fa-book-open"></i> ${current.name}</div>
+    let html=`<section class="card adhkar-hub" id="adhkar-hub"><div class="adhkar-hub-head"><div class="card-title"><i class="fas fa-book-open"></i> <span>${current.name}</span></div><button class="adhkar-hub-toggle" type="button" onclick="toggleAdhkarHub()" aria-label="طي أو فتح أدوات الأقسام"><i class="fas fa-chevron-up"></i></button></div><div class="adhkar-hub-body">
       <label class="adhkar-search"><i class="fas fa-search"></i><input type="search" placeholder="ابحث في الأذكار والأقسام" oninput="filterImportedAdhkar(this.value)"></label>
       <div class="adhkar-featured">${featuredRows.map(c=>`<button class="tab-btn ${category===c.key?'active':''}" onclick="renderAdhkar('${c.key}')">${c.name}</button>`).join('')}</div>
       <select class="adhkar-category-select" aria-label="كل أقسام الأذكار" onchange="if(this.value) renderAdhkar(this.value)"><option value="">كل الأقسام (${importedCategories.length})</option>${importedCategories.map(c=>`<option value="${c.key}" ${category===c.key?'selected':''}>${c.name}</option>`).join('')}</select>
       <div id="adhkar-search-results"></div>
       <div class="adhkar-category-progress"><div><strong>${cp.completed}</strong> من ${AdhkarDB[category]?.length||0} مكتمل</div><div><strong>${cp.current}</strong> من ${cp.total} تكرار</div></div>
       <div class="progress-bar"><div class="progress-fill" style="width:${cp.percentage}%"></div></div>
-      <div class="adhkar-category-actions"><button class="tab-btn" onclick="completeDhikrCategory('${category}')"><i class="fas fa-check-double"></i> إكمال القسم</button><button class="tab-btn danger" onclick="resetDhikrCategory('${category}')"><i class="fas fa-rotate-left"></i> تصفير</button></div></section>`;
+      <div class="adhkar-category-actions"><button class="tab-btn" onclick="completeDhikrCategory('${category}')"><i class="fas fa-check-double"></i> إكمال القسم</button><button class="tab-btn danger" onclick="resetDhikrCategory('${category}')"><i class="fas fa-rotate-left"></i> تصفير</button></div></div></section>`;
     (AdhkarDB[category]||[]).forEach(item=>{const st=progress[item.id]||{current:0,completed:false},pct=item.count?Math.min(100,st.current/item.count*100):0; html+=`<article class="card dhikr-card" id="adhkar-${item.id}"><div class="dhikr-card-head"><strong>${item.sourceCategory||current.name}</strong><span>${item.times||`${item.count} مرة`}</span></div><div class="dhikr-text">${item.text}</div>${item.reference?`<small class="dhikr-reference">${item.reference}</small>`:''}<div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div><div class="dhikr-audio-row">${item.audio?`<button class="tab-btn dhikr-audio-btn" onclick="toggleDhikrAudio(${item.id}, '${item.audio}')"><i class="fas fa-play" id="dhikr-audio-icon-${item.id}"></i> <span id="dhikr-audio-label-${item.id}">استماع</span></button>`:'<small>لا يوجد تسجيل لهذا الذكر</small>'}<label class="adhkar-autoplay"><input type="checkbox" ${dhikrAutoNext?'checked':''} onchange="setDhikrAutoNext(this.checked)"> متابعة تلقائية</label></div><div class="counter-controls"><button class="counter-btn" onclick="updateDhikrCount(${item.id},-1)" ${st.completed?'disabled':''}><i class="fas fa-minus"></i></button><button class="complete-btn" onclick="completeDhikrNow(${item.id})" ${st.completed?'disabled':''}>${st.completed?'✓ مكتمل':`${st.current} / ${item.count}`}</button><button class="counter-btn" onclick="updateDhikrCount(${item.id},1)" ${st.completed?'disabled':''}><i class="fas fa-plus"></i></button></div></article>`});
-    content.innerHTML=html; syncDhikrAudioUI();
+    content.innerHTML=html; syncDhikrAudioUI(); setupAdhkarCollapsibleHub();
 }
+let adhkarHubScrollHandler=null;
+function setAdhkarHubCollapsed(collapsed){
+    const hub=document.getElementById('adhkar-hub'); if(!hub)return;
+    hub.classList.toggle('collapsed',!!collapsed);
+    const icon=hub.querySelector('.adhkar-hub-toggle i'); if(icon)icon.className=`fas fa-chevron-${collapsed?'down':'up'}`;
+}
+function toggleAdhkarHub(){const hub=document.getElementById('adhkar-hub');if(hub)setAdhkarHubCollapsed(!hub.classList.contains('collapsed'))}
+function setupAdhkarCollapsibleHub(){
+    if(adhkarHubScrollHandler)window.removeEventListener('scroll',adhkarHubScrollHandler);
+    const hub=document.getElementById('adhkar-hub'); if(!hub)return;
+    const threshold=hub.getBoundingClientRect().top+window.scrollY+90;
+    adhkarHubScrollHandler=()=>{if(!document.getElementById('adhkar-hub')){window.removeEventListener('scroll',adhkarHubScrollHandler);adhkarHubScrollHandler=null;return}setAdhkarHubCollapsed(window.scrollY>threshold)};
+    window.addEventListener('scroll',adhkarHubScrollHandler,{passive:true}); adhkarHubScrollHandler();
+}
+window.toggleAdhkarHub=toggleAdhkarHub;
+
 function filterImportedAdhkar(query){
     const q=String(query||'').trim(), box=document.getElementById('adhkar-search-results'); if(!box)return; if(!q){box.innerHTML='';return}
     const cats=window.ImportedAdhkarCategories||[]; const matches=[]; cats.forEach(c=>(AdhkarDB[c.key]||[]).forEach(i=>{if((c.name+' '+i.text+' '+(i.reference||'')).includes(q))matches.push({c,i})}));
@@ -698,8 +714,19 @@ function dhikrItem(id){for(const [category,items] of Object.entries(AdhkarDB)){c
 function emitDhikrState(){if(!activeDhikrAudio||!activeDhikrAudioId)return;const hit=dhikrItem(activeDhikrAudioId);window.dispatchEvent(new CustomEvent('zad:audio-state',{detail:{kind:'dhikr',playing:!activeDhikrAudio.paused,currentTime:activeDhikrAudio.currentTime||0,duration:Number.isFinite(activeDhikrAudio.duration)?activeDhikrAudio.duration:0,title:hit?.item?.sourceCategory||'الأذكار',subtitle:(hit?.item?.text||'ذكر مسموع').slice(0,70)}}))}
 function syncDhikrAudioUI(){document.querySelectorAll('.dhikr-audio-btn').forEach(b=>{const id=Number(b.getAttribute('onclick')?.match(/\((\d+)/)?.[1]);const icon=document.getElementById(`dhikr-audio-icon-${id}`),label=document.getElementById(`dhikr-audio-label-${id}`);if(!icon||!label)return;const active=id===activeDhikrAudioId;icon.className=`fas fa-${active&&!activeDhikrAudio?.paused?'pause':'play'}`;label.textContent=active?(activeDhikrAudio?.paused?'متابعة':'إيقاف'):'استماع'})}
 function stopDhikrAudio(reset=true){if(activeDhikrAudio){activeDhikrAudio.pause();if(reset)activeDhikrAudio.currentTime=0}if(reset){activeDhikrAudio=null;activeDhikrAudioId=null;activeDhikrAudioCategory=null}syncDhikrAudioUI()}
+function completeDhikrFromAudio(id){
+    const hit=dhikrItem(id); if(!hit)return;
+    const progress=Storage.load('adhkar_progress')||{};
+    progress[id]={current:hit.item.count,completed:true,lastCompleted:new Date().toISOString(),completedBy:'audio'};
+    Storage.save('adhkar_progress',progress);
+    const card=document.getElementById(`adhkar-${id}`); if(card){
+        card.classList.add('dhikr-audio-completed');
+        const fill=card.querySelector('.progress-fill'); if(fill)fill.style.width='100%';
+        const done=card.querySelector('.complete-btn'); if(done){done.textContent='✓ مكتمل بالسماع';done.disabled=true}
+    }
+}
 function playDhikrAudio(id,src){
-    const same=activeDhikrAudioId===id&&activeDhikrAudio; if(!same){stopDhikrAudio();window.stopQuranAyahAudio?.();window.stopSurahAudio?.();activeDhikrAudio=new Audio(src);activeDhikrAudioId=id;activeDhikrAudioCategory=dhikrItem(id)?.category||activeDhikrCategory;activeDhikrAudio.preload='auto';activeDhikrAudio.addEventListener('timeupdate',emitDhikrState);activeDhikrAudio.addEventListener('play',()=>{window.stopQuranAyahAudio?.();window.stopSurahAudio?.();syncDhikrAudioUI();emitDhikrState()});activeDhikrAudio.addEventListener('pause',()=>{syncDhikrAudioUI();emitDhikrState()});activeDhikrAudio.addEventListener('ended',()=>{const cat=activeDhikrAudioCategory,list=AdhkarDB[cat]||[],idx=list.findIndex(x=>x.id===id),next=dhikrAutoNext?list.slice(idx+1).find(x=>x.audio):null;if(next)playDhikrAudio(next.id,next.audio);else stopDhikrAudio()});activeDhikrAudio.addEventListener('error',()=>{stopDhikrAudio();window.showToast?.('تعذر تشغيل هذا التسجيل')})}
+    const same=activeDhikrAudioId===id&&activeDhikrAudio; if(!same){stopDhikrAudio();window.stopQuranAyahAudio?.();window.stopSurahAudio?.();activeDhikrAudio=new Audio(src);activeDhikrAudioId=id;activeDhikrAudioCategory=dhikrItem(id)?.category||activeDhikrCategory;activeDhikrAudio.preload='auto';activeDhikrAudio.addEventListener('timeupdate',emitDhikrState);activeDhikrAudio.addEventListener('play',()=>{window.stopQuranAyahAudio?.();window.stopSurahAudio?.();syncDhikrAudioUI();emitDhikrState()});activeDhikrAudio.addEventListener('pause',()=>{syncDhikrAudioUI();emitDhikrState()});activeDhikrAudio.addEventListener('ended',()=>{completeDhikrFromAudio(id);const cat=activeDhikrAudioCategory,list=AdhkarDB[cat]||[],idx=list.findIndex(x=>x.id===id),next=dhikrAutoNext?list.slice(idx+1).find(x=>x.audio):null;if(next)playDhikrAudio(next.id,next.audio);else stopDhikrAudio()});activeDhikrAudio.addEventListener('error',()=>{stopDhikrAudio();window.showToast?.('تعذر تشغيل هذا التسجيل')})}
     activeDhikrAudio.play().catch(()=>window.showToast?.('تعذر بدء الصوت')); syncDhikrAudioUI();
 }
 function toggleDhikrAudio(id,src){if(activeDhikrAudioId===id&&activeDhikrAudio){activeDhikrAudio.paused?activeDhikrAudio.play():activeDhikrAudio.pause();return}playDhikrAudio(id,src)}
