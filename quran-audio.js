@@ -75,7 +75,7 @@
         if (audio) return audio;
         audio = new Audio();
         audio.preload = 'metadata';
-        audio.addEventListener('play', () => { window.stopSurahAudio?.(); updateControls(); followCurrentAyah(); });
+        audio.addEventListener('play', () => { window.stopDhikrAudio?.(); window.stopSurahAudio?.(); updateControls(); followCurrentAyah(); });
         audio.addEventListener('pause', updateControls);
         audio.addEventListener('timeupdate', onTimeUpdate);
         audio.addEventListener('loadedmetadata', updateProgress);
@@ -157,6 +157,7 @@
     function clamp(value, min, max) { return Math.max(min, Math.min(max, Number(value) || min)); }
 
     async function playAyah(surah, ayah, asSurah = false, restoreSeconds = 0) {
+        window.stopDhikrAudio?.();
         window.stopSurahAudio?.();
         if (!context || context.surahId !== surah) {
             window.openSurah(surah, ayah);
