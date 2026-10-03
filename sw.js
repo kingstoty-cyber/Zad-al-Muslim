@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zad-al-muslim-v4-9-3-beta-5-2-ui3';
+const CACHE_NAME = 'zad-al-muslim-v4-9-3-beta-5-3-ui13';
 const AUDIO_CACHE = 'zad-quran-audio-v45';
 const AZKAR_AUDIO_ASSETS = [
   './assets/audio/azkari/adkaralmsa_2.mp3',
@@ -190,7 +190,7 @@ self.addEventListener('activate', event => {
 });
 self.addEventListener('message', event => {
   if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
-  if (event.data && event.data.type === 'GET_VERSION') event.source?.postMessage({type:'APP_VERSION',version:'4.9.3-beta.5.2'});
+  if (event.data && event.data.type === 'GET_VERSION') event.source?.postMessage({type:'APP_VERSION',version:'4.9.3-beta.5.3'});
 });
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;

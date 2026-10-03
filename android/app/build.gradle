@@ -7,8 +7,8 @@ android {
         applicationId "ly.zadalmuslim.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 493052
-        versionName "4.9.3-beta.5.2"
+        versionCode 493053
+        versionName "4.9.3-beta.5.3"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.

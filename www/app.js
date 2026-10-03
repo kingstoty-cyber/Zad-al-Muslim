@@ -667,40 +667,47 @@ function getDhikrCategoryProgress(category, progress) {
     return { total, current, completed, percentage: total ? Math.round((current / total) * 100) : 0 };
 }
 
-function renderAdhkar(category = 'azkari_1') {
+function adhkarCategoryIcon(name='') {
+    if (/صباح|استيقاظ/.test(name)) return 'fa-sun';
+    if (/مساء|نوم/.test(name)) return 'fa-moon';
+    if (/صلاة|مسجد/.test(name)) return 'fa-mosque';
+    if (/منزل|دخول|خروج/.test(name)) return 'fa-house';
+    if (/طعام|شراب/.test(name)) return 'fa-utensils';
+    if (/مرض|رقية/.test(name)) return 'fa-heart-pulse';
+    if (/سفر|ركوب/.test(name)) return 'fa-route';
+    if (/قرآن/.test(name)) return 'fa-book-quran';
+    return 'fa-hands-praying';
+}
+function renderAdhkar(category = activeDhikrCategory || 'azkari_1') {
     const importedCategories = window.ImportedAdhkarCategories || (typeof ImportedAdhkarCategories !== 'undefined' ? ImportedAdhkarCategories : []);
     if (!AdhkarDB[category]) category = importedCategories[0]?.key || 'azkari_1';
     ensureDailyAdhkarProgress(); activeDhikrCategory = category; Storage.save('adhkar_active_category', category);
     const content=document.getElementById('page-content'); content.className='fade-in adhkar-page';
     const progress=Storage.load('adhkar_progress')||{}, cp=getDhikrCategoryProgress(category,progress), current=importedCategories.find(c=>c.key===category)||{name:'الأذكار'};
-    const featured=['azkari_1','azkari_2','azkari_4','azkari_5','azkari_6','azkari_11'];
-    const featuredRows=importedCategories.filter(c=>featured.includes(c.key));
-    let html=`<section class="card adhkar-hub" id="adhkar-hub"><div class="adhkar-hub-head"><div class="card-title"><i class="fas fa-book-open"></i> <span>${current.name}</span></div><button class="adhkar-hub-toggle" type="button" onclick="toggleAdhkarHub()" aria-label="طي أو فتح أدوات الأقسام"><i class="fas fa-chevron-up"></i></button></div><div class="adhkar-hub-body">
-      <label class="adhkar-search"><i class="fas fa-search"></i><input type="search" placeholder="ابحث في الأذكار والأقسام" oninput="filterImportedAdhkar(this.value)"></label>
-      <div class="adhkar-featured">${featuredRows.map(c=>`<button class="tab-btn ${category===c.key?'active':''}" onclick="renderAdhkar('${c.key}')">${c.name}</button>`).join('')}</div>
-      <select class="adhkar-category-select" aria-label="كل أقسام الأذكار" onchange="if(this.value) renderAdhkar(this.value)"><option value="">كل الأقسام (${importedCategories.length})</option>${importedCategories.map(c=>`<option value="${c.key}" ${category===c.key?'selected':''}>${c.name}</option>`).join('')}</select>
-      <div id="adhkar-search-results"></div>
-      <div class="adhkar-category-progress"><div><strong>${cp.completed}</strong> من ${AdhkarDB[category]?.length||0} مكتمل</div><div><strong>${cp.current}</strong> من ${cp.total} تكرار</div></div>
-      <div class="progress-bar"><div class="progress-fill" style="width:${cp.percentage}%"></div></div>
-      <div class="adhkar-category-actions"><button class="tab-btn" onclick="completeDhikrCategory('${category}')"><i class="fas fa-check-double"></i> إكمال القسم</button><button class="tab-btn danger" onclick="resetDhikrCategory('${category}')"><i class="fas fa-rotate-left"></i> تصفير</button></div></div></section>`;
+    let html=`<section class="card adhkar-reader-head">
+      <button class="adhkar-drawer-open" type="button" onclick="openAdhkarDrawer()" aria-label="فتح أقسام الأذكار" aria-controls="adhkar-drawer"><i class="fas fa-bars"></i><span>الأقسام</span></button>
+      <div class="adhkar-current-category"><i class="fas ${adhkarCategoryIcon(current.name)}"></i><div><strong>${current.name}</strong><small>${AdhkarDB[category]?.length||0} ذكر</small></div></div>
+      <div class="adhkar-category-progress compact"><strong>${cp.percentage}%</strong><span>${cp.completed}/${AdhkarDB[category]?.length||0}</span></div>
+    </section>
+    <div class="adhkar-drawer-backdrop" id="adhkar-drawer-backdrop" hidden onclick="closeAdhkarDrawer()"></div>
+    <aside class="adhkar-drawer" id="adhkar-drawer" aria-hidden="true" aria-label="أقسام الأذكار">
+      <div class="adhkar-drawer-header"><strong>أقسام الأذكار</strong><button type="button" onclick="closeAdhkarDrawer()" aria-label="إغلاق"><i class="fas fa-xmark"></i></button></div>
+      <label class="adhkar-drawer-search"><i class="fas fa-search"></i><input type="search" placeholder="ابحث عن قسم" oninput="filterAdhkarDrawer(this.value)"></label>
+      <div class="adhkar-drawer-list" id="adhkar-drawer-list">${importedCategories.map(c=>`<button type="button" data-name="${c.name}" class="${category===c.key?'active':''}" onclick="selectAdhkarCategory('${c.key}')"><i class="fas ${adhkarCategoryIcon(c.name)}"></i><span><strong>${c.name}</strong><small>${(AdhkarDB[c.key]||[]).length} ذكر</small></span><i class="fas fa-chevron-left"></i></button>`).join('')}</div>
+      <div class="adhkar-drawer-actions"><button class="tab-btn" onclick="completeDhikrCategory('${category}');closeAdhkarDrawer()"><i class="fas fa-check-double"></i> إكمال القسم</button><button class="tab-btn danger" onclick="resetDhikrCategory('${category}');closeAdhkarDrawer()"><i class="fas fa-rotate-left"></i> تصفير</button></div>
+    </aside>`;
     (AdhkarDB[category]||[]).forEach(item=>{const st=progress[item.id]||{current:0,completed:false},pct=item.count?Math.min(100,st.current/item.count*100):0; html+=`<article class="card dhikr-card" id="adhkar-${item.id}"><div class="dhikr-card-head"><strong>${item.sourceCategory||current.name}</strong><span>${item.times||`${item.count} مرة`}</span></div><div class="dhikr-text">${item.text}</div>${item.reference?`<small class="dhikr-reference">${item.reference}</small>`:''}<div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div><div class="dhikr-audio-row">${item.audio?`<button class="tab-btn dhikr-audio-btn" onclick="toggleDhikrAudio(${item.id}, '${item.audio}')"><i class="fas fa-play" id="dhikr-audio-icon-${item.id}"></i> <span id="dhikr-audio-label-${item.id}">استماع</span></button>`:'<small>لا يوجد تسجيل لهذا الذكر</small>'}<label class="adhkar-autoplay"><input type="checkbox" ${dhikrAutoNext?'checked':''} onchange="setDhikrAutoNext(this.checked)"> متابعة تلقائية</label></div><div class="counter-controls"><button class="counter-btn" onclick="updateDhikrCount(${item.id},-1)" ${st.completed?'disabled':''}><i class="fas fa-minus"></i></button><button class="complete-btn" onclick="completeDhikrNow(${item.id})" ${st.completed?'disabled':''}>${st.completed?'✓ مكتمل':`${st.current} / ${item.count}`}</button><button class="counter-btn" onclick="updateDhikrCount(${item.id},1)" ${st.completed?'disabled':''}><i class="fas fa-plus"></i></button></div></article>`});
-    content.innerHTML=html; syncDhikrAudioUI(); setupAdhkarCollapsibleHub();
+    content.innerHTML=html; syncDhikrAudioUI();
 }
-let adhkarHubScrollHandler=null;
-function setAdhkarHubCollapsed(collapsed){
-    const hub=document.getElementById('adhkar-hub'); if(!hub)return;
-    hub.classList.toggle('collapsed',!!collapsed);
-    const icon=hub.querySelector('.adhkar-hub-toggle i'); if(icon)icon.className=`fas fa-chevron-${collapsed?'down':'up'}`;
+function openAdhkarDrawer(){
+    if(AppState.currentTab!=='adhkar') return;
+    const drawer=document.getElementById('adhkar-drawer'),backdrop=document.getElementById('adhkar-drawer-backdrop'); if(!drawer||!backdrop)return;
+    drawer.classList.add('open');drawer.setAttribute('aria-hidden','false');backdrop.hidden=false;document.body.classList.add('adhkar-drawer-opened');
 }
-function toggleAdhkarHub(){const hub=document.getElementById('adhkar-hub');if(hub)setAdhkarHubCollapsed(!hub.classList.contains('collapsed'))}
-function setupAdhkarCollapsibleHub(){
-    if(adhkarHubScrollHandler)window.removeEventListener('scroll',adhkarHubScrollHandler);
-    const hub=document.getElementById('adhkar-hub'); if(!hub)return;
-    const threshold=hub.getBoundingClientRect().top+window.scrollY+90;
-    adhkarHubScrollHandler=()=>{if(!document.getElementById('adhkar-hub')){window.removeEventListener('scroll',adhkarHubScrollHandler);adhkarHubScrollHandler=null;return}setAdhkarHubCollapsed(window.scrollY>threshold)};
-    window.addEventListener('scroll',adhkarHubScrollHandler,{passive:true}); adhkarHubScrollHandler();
-}
-window.toggleAdhkarHub=toggleAdhkarHub;
+function closeAdhkarDrawer(){const drawer=document.getElementById('adhkar-drawer'),backdrop=document.getElementById('adhkar-drawer-backdrop');drawer?.classList.remove('open');drawer?.setAttribute('aria-hidden','true');if(backdrop)backdrop.hidden=true;document.body.classList.remove('adhkar-drawer-opened')}
+function selectAdhkarCategory(category){closeAdhkarDrawer();renderAdhkar(category);window.scrollTo({top:0,behavior:'auto'})}
+function filterAdhkarDrawer(query){const q=String(query||'').trim();document.querySelectorAll('#adhkar-drawer-list > button').forEach(b=>{b.hidden=q&&!String(b.dataset.name||'').includes(q)})}
+window.openAdhkarDrawer=openAdhkarDrawer;window.closeAdhkarDrawer=closeAdhkarDrawer;window.selectAdhkarCategory=selectAdhkarCategory;window.filterAdhkarDrawer=filterAdhkarDrawer;
 
 function filterImportedAdhkar(query){
     const q=String(query||'').trim(), box=document.getElementById('adhkar-search-results'); if(!box)return; if(!q){box.innerHTML='';return}
@@ -1283,7 +1290,7 @@ function renderSettings() {
 
         <div class="card">
             <div class="card-title"><i class="fas fa-circle-info"></i> حول التطبيق</div>
-            <p>تطبيق <span style="color: var(--primary-color)">زاد المسلم</span> - الإصدار ${window.ZAD_APP?.version || '4.9.3-beta.5.2'}</p>
+            <p>تطبيق <span style="color: var(--primary-color)">زاد المسلم</span> - الإصدار ${window.ZAD_APP?.version || '4.9.3-beta.5.3'}</p>
             <p style="font-size: 0.9rem; line-height: 1.6;">
                 تطبيق متكامل لمتابعة العبادات اليومية، الأذكار، وقراءة القرآن الكريم.<br>
                 يعمل دون اتصال في القرآن والأذكار بعد التحميل الأول ويحفظ تقدمك محلياً.<br>
@@ -1359,7 +1366,7 @@ function renderMore() {
         ['fa-palette', 'المظهر', 'اختيار الألوان ووضع القراءة', "loadTab('themes')"],
         ['fa-user-gear', 'الإعدادات', 'التنبيهات والبيانات والخصوصية', "loadTab('settings')"],
         ['fa-download', 'التنزيلات', 'إدارة التلاوات المحفوظة', 'renderAudioDownloads()'],
-        ['fa-mobile-screen-button', 'تطبيق Android', '4.9.3-beta.5.2 — إصلاحات الاستقرار والتحديث', "window.open('https://github.com/kingstoty-cyber/Zad-al-Muslim/actions/workflows/android-apk.yml','_blank','noopener')"]
+        ['fa-mobile-screen-button', 'تطبيق Android', '4.9.3-beta.5.3 — إصلاحات الاستقرار والتحديث', "window.open('https://github.com/kingstoty-cyber/Zad-al-Muslim/actions/workflows/android-apk.yml','_blank','noopener')"]
     ];
     content.innerHTML = `
         <div class="simple-page-heading">
@@ -1380,6 +1387,7 @@ window.renderMore = renderMore;
 // ========== الدوال العامة ==========
 
 function loadTab(tabName) {
+    closeAdhkarDrawer?.();
     AppState.currentTab = tabName;
     
     document.querySelectorAll('.nav-item').forEach(item => {
