@@ -1,7 +1,7 @@
 import {readFile,readdir,stat} from 'node:fs/promises';
 import {resolve} from 'node:path';
 const root=resolve(import.meta.dirname,'..');
-const version='4.9.3-beta.5.3', cache='zad-al-muslim-v4-9-3-beta-5-2-ui3';
+const version='4.9.3-beta.5.3', cache='zad-al-muslim-v4-9-3-beta-5-3-ui13';
 const must=async(f)=>readFile(resolve(root,f),'utf8');
 const failures=[]; const ok=(c,m)=>{if(!c)failures.push(m)};
 const [pkg,lock,config,html,manifest,sw,audio,shell,quran,video,prayer,app,androidManifest,gradle,mediaPlugin,prepare,homeUi]=await Promise.all([
@@ -12,10 +12,10 @@ ok(JSON.parse(pkg).version===version,'package.json version mismatch');
 ok(lockJson.version===version&&lockJson.packages?.['']?.version===version,'package-lock version mismatch');
 ok(JSON.parse(pkg).dependencies?.['@capacitor/geolocation'],'official Capacitor Geolocation dependency missing');
 ok(config.includes(`version: '${version}'`),'config version mismatch');
-ok(html.includes('v4.9.3 Beta 5.2'),'HTML title version mismatch');
-ok(JSON.parse(manifest).name.includes('Beta 5.2'),'PWA manifest version mismatch');
+ok(html.includes('v4.9.3 Beta 5.3'),'HTML title version mismatch');
+ok(JSON.parse(manifest).name.includes('Beta 5.3'),'PWA manifest version mismatch');
 ok(sw.includes(`CACHE_NAME = '${cache}'`)&&sw.includes(`version:'${version}'`)&&sw.includes("'./ui2-polish.css'")&&sw.includes("'./ui3-enhance.css'")&&sw.includes("'./ui3-enhance.js'"),'service-worker version/cache/UI2+UI3 asset mismatch');
-ok(gradle.includes(`versionName "${version}"`)&&/versionCode\s+493052/.test(gradle),'Android versionName/versionCode mismatch');
+ok(gradle.includes(`versionName "${version}"`)&&/versionCode\s+493053/.test(gradle),'Android versionName/versionCode mismatch');
 for(const tab of ['home','quran','adhkar','audio-quran','more']) ok(html.includes(`data-tab="${tab}"`),`missing bottom tab ${tab}`);
 ok(shell.includes('.bottom-nav .nav-item')&&shell.includes('window.loadTab?.(tab)'),'bottom navigation integration missing');
 ok(audio.includes("filter === 'young' && item.group === 'young'")&&audio.includes('value="young">القراء الشباب'),'young readers filter missing');
