@@ -28,7 +28,7 @@
     if(audio)return audio;
     audio=new Audio();audio.preload='metadata';
     audio.addEventListener('timeupdate',updatePlayerUI);
-    audio.addEventListener('play',()=>{window.stopQuranAyahAudio?.();updatePlayerUI()});
+    audio.addEventListener('play',()=>{window.stopDhikrAudio?.();window.stopQuranAyahAudio?.();updatePlayerUI()});
     audio.addEventListener('pause',updatePlayerUI);
     audio.addEventListener('ended',()=>{const s=settings();if(s.repeat===-1||repetitions+1<s.repeat){repetitions+=1;audio.currentTime=0;audio.play().catch(()=>setStatus('تعذر تكرار السورة.',true));return}repetitions=0;const next=adjacentSurah(1);if(s.autoNext&&next!==currentSurah)playSurah(next);else setStatus('اكتملت السور المتاحة.')});
     audio.addEventListener('error',()=>setStatus(navigator.onLine?'تعذر تشغيل ملف السورة من المصدر.':'السورة غير محفوظة على هذا الجهاز.',true));
@@ -62,7 +62,7 @@
   function setFullSleep(minutes){clearTimeout(sleepTimer);if(!minutes)return setStatus('تم إلغاء مؤقت النوم.');sleepTimer=setTimeout(()=>{getPlayer().pause();setStatus(`توقف التشغيل بعد ${minutes} دقيقة.`)},minutes*60000);setStatus(`سيتم إيقاف التشغيل بعد ${minutes} دقيقة.`)}
   function filterSurahs(query){const list=document.getElementById('audio-surah-list');if(list)list.innerHTML=surahRows(query)}
   async function playSurah(surah=currentSurah,resume=false){
-    await load();const reciter=selected(),available=availableSurahs(reciter),requested=Number(surah),player=getPlayer();window.stopQuranAyahAudio?.();if(!available.includes(requested)){setStatus('هذه السورة غير متوفرة بصوت القارئ المختار.',true);return}currentSurah=requested;repetitions=0;player.playbackRate=settings().speed;
+    await load();const reciter=selected(),available=availableSurahs(reciter),requested=Number(surah),player=getPlayer();window.stopDhikrAudio?.();window.stopQuranAyahAudio?.();if(!available.includes(requested)){setStatus('هذه السورة غير متوفرة بصوت القارئ المختار.',true);return}currentSurah=requested;repetitions=0;player.playbackRate=settings().speed;
     const nextUrl=audioUrl(reciter,currentSurah),last=read(KEYS.last,{});if(player.src!==nextUrl)player.src=nextUrl;
     player.addEventListener('loadedmetadata',()=>{if(resume&&last.id===reciter.id&&last.surah===currentSurah)player.currentTime=Math.min(Number(last.seconds)||0,Math.max(0,player.duration-1))},{once:true});
     try{await player.play();setMediaSession(reciter);updatePlayerUI();updateSurahSelection();updateCachedState()}catch(_){setStatus('تعذر بدء التشغيل. تحقق من الاتصال ثم أعد المحاولة.',true)}
