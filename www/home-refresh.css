@@ -1,0 +1,63 @@
+/* Beta 5.2 UI refresh */
+#current-theme{display:none!important}
+.header-section{position:relative;padding:14px 16px 10px!important;min-height:auto!important}
+.header-section h1{font-size:1.35rem!important;margin:0!important}
+.header-section #current-date{font-size:.78rem;opacity:.68;margin:4px 0 0!important}
+.home-v2{box-sizing:border-box;width:100%;max-width:760px;margin:auto;padding:0 12px 96px}
+.home-v2>*{min-width:0}
+.home-v2>*+*{margin-top:12px}
+.home-hero{box-sizing:border-box;padding:18px;border-radius:22px;background:var(--card-bg);border:1px solid var(--soft-white)}
+@supports (background:color-mix(in srgb,#000 20%,transparent)){
+  .home-hero{background:linear-gradient(135deg,color-mix(in srgb,var(--primary-color) 25%,var(--card-bg)),var(--card-bg));border-color:color-mix(in srgb,var(--primary-color) 28%,transparent)}
+}
+.home-eyebrow{font-size:.74rem;opacity:.65}
+.home-prayer-line{display:flex;justify-content:space-between;align-items:end;gap:10px;min-width:0}
+.home-prayer-line strong{font-size:1.4rem;color:var(--primary-color);min-width:0;overflow-wrap:anywhere}
+.home-prayer-line span{font-weight:800;white-space:nowrap}
+.home-location{margin-top:8px;font-size:.76rem;opacity:.7;overflow-wrap:anywhere}
+.home-prayers-mini{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;margin-top:12px}
+.home-prayers-mini div{text-align:center;min-width:0;padding:7px 2px;border-radius:10px;background:var(--soft-white)}
+.home-prayers-mini .current{outline:1px solid var(--primary-color);color:var(--primary-color)}
+.home-prayers-mini b,.home-prayers-mini span{display:block;font-size:.67rem;white-space:nowrap}
+.home-actions{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;min-width:0}
+.home-action{box-sizing:border-box;min-width:0;min-height:76px;border:1px solid var(--soft-white);background:var(--card-bg);color:var(--text-color);border-radius:16px;padding:9px 4px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;font-family:inherit}
+.home-action i{font-size:1.2rem;color:var(--primary-color)}
+.home-action span{font-size:.72rem;white-space:nowrap}
+.home-section,.home-ayah{box-sizing:border-box;min-width:0;background:var(--card-bg);border:1px solid var(--soft-white);border-radius:18px;padding:14px}
+.home-section-head{display:flex;justify-content:space-between;align-items:center;gap:8px;min-width:0;margin-bottom:10px}
+.home-link{border:0;background:transparent;color:var(--primary-color);font-family:inherit;white-space:nowrap}
+.home-continue{box-sizing:border-box;width:100%;min-width:0;border:0;background:var(--soft-white);color:var(--text-color);border-radius:14px;padding:12px;display:flex;align-items:center;gap:10px;text-align:right;font-family:inherit}
+.home-continue div{flex:1;min-width:0;display:flex;flex-direction:column}
+.home-continue small{opacity:.62;overflow-wrap:anywhere}
+.home-progress-row{display:flex;align-items:center;gap:10px;min-width:0}
+.home-progress-row .progress-bar{flex:1;min-width:0;margin:0!important}
+.home-ayah{text-align:center}
+.home-ayah p{font-family:'Amiri',serif;font-size:1.18rem;line-height:1.9;margin:0;overflow-wrap:anywhere}
+.home-ayah small{display:block;color:var(--primary-color);margin-top:7px}
+.home-reminder{text-align:center;font-size:.8rem;opacity:.72;padding:3px 10px;overflow-wrap:anywhere}
+@media(max-width:390px){
+  .home-v2{padding-inline:9px}
+  .home-actions{gap:6px}
+  .home-action{min-height:70px}
+  .home-action span{font-size:.68rem}
+  .home-prayers-mini span{font-size:.61rem}
+}
+
+
+/* UI5 prayer dashboard — theme compatible, no fixed image */
+#manual-toggle[hidden]{display:none!important}
+.header-settings-button{position:absolute;left:12px;top:12px;width:42px;height:42px;border:0;border-radius:13px;background:transparent;color:var(--primary-color);font-size:1.35rem;display:grid;place-items:center;cursor:pointer}
+.prayer-dashboard{position:relative;overflow:hidden;min-height:270px;padding:18px 14px 14px!important;background:var(--card-bg)!important;border:1px solid var(--soft-white)!important;color:var(--text-color)!important}
+@supports (background:color-mix(in srgb,#000 20%,transparent)){.prayer-dashboard{background:linear-gradient(135deg,color-mix(in srgb,var(--primary-color) 16%,var(--card-bg)),var(--card-bg) 62%)!important;border-color:color-mix(in srgb,var(--primary-color) 28%,var(--soft-white))!important}}
+.prayer-hero-main{min-height:130px;display:grid;grid-template-columns:1fr 1fr;direction:rtl;align-items:center}
+.prayer-current,.prayer-next{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-align:center;min-width:0}
+.prayer-next{border-right:1px solid var(--soft-white)}
+.prayer-hero-main small{font-size:.76rem;opacity:.72}.prayer-hero-main strong{font-size:1.55rem;color:var(--text-color)}.prayer-hero-main span{font-size:.78rem;opacity:.7}.prayer-hero-main b{font-size:1.38rem;color:var(--primary-color);direction:ltr}
+.prayer-progress{height:6px;border-radius:99px;background:var(--soft-white);overflow:hidden;margin:0 4px 10px}.prayer-progress span{display:block;width:38%;height:100%;border-radius:inherit;background:var(--primary-color)}
+.prayer-dashboard .home-location{text-align:right;margin:8px 4px 10px;font-size:.7rem}.prayer-dashboard .home-location .fa-circle-check{color:var(--primary-color)}
+.home-wird-card,.home-dhikr-card{box-sizing:border-box;background:var(--card-bg);border:1px solid var(--soft-white);border-radius:18px;padding:14px}
+.home-wird-card{display:flex;align-items:center;justify-content:space-between;gap:12px;text-align:right}
+.home-wird-card>div{min-width:0;flex:1}.home-wird-card small,.home-dhikr-card small{display:block;color:var(--primary-color);margin-bottom:4px}.home-wird-card strong{display:block;font-size:1rem}.home-wird-card p{margin:5px 0 0;font-size:.78rem;line-height:1.65;opacity:.72}
+.home-wird-card button{flex:0 0 auto;border:0;border-radius:12px;padding:10px 12px;background:var(--primary-color);color:var(--bg-color);font-family:inherit;font-weight:700}
+.home-dhikr-card{text-align:center}.home-dhikr-card p{margin:2px 0 0;line-height:1.85;font-size:.95rem}
+@media(max-width:390px){.prayer-dashboard{min-height:255px}.prayer-hero-main{min-height:120px}.prayer-hero-main strong{font-size:1.35rem}.prayer-hero-main b{font-size:1.18rem}.home-wird-card{align-items:stretch;flex-direction:column}.home-wird-card button{width:100%}}
