@@ -28,7 +28,7 @@
     if(audio)return audio;
     audio=new Audio();audio.preload='metadata';
     audio.addEventListener('timeupdate',updatePlayerUI);
-    audio.addEventListener('play',()=>{window.stopQuranAyahAudio?.();updatePlayerUI()});
+    audio.addEventListener('play',()=>{window.stopQuranAyahAudio?.();window.stopDhikrAudio?.();updatePlayerUI()});
     audio.addEventListener('pause',updatePlayerUI);
     audio.addEventListener('ended',()=>{const s=settings();if(s.repeat===-1||repetitions+1<s.repeat){repetitions+=1;audio.currentTime=0;audio.play().catch(()=>setStatus('تعذر تكرار السورة.',true));return}repetitions=0;const next=adjacentSurah(1);if(s.autoNext&&next!==currentSurah)playSurah(next);else setStatus('اكتملت السور المتاحة.')});
     audio.addEventListener('error',()=>setStatus(navigator.onLine?'تعذر تشغيل ملف السورة من المصدر.':'السورة غير محفوظة على هذا الجهاز.',true));

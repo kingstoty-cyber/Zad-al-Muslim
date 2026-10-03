@@ -1,0 +1,27 @@
+/* Zad Al-Muslim Beta 5.2 UI2 — conservative layout polish only.
+   No functional selectors are hidden or removed. */
+:root{--ui2-gap:12px;--ui2-radius:16px;--ui2-touch:46px}
+.main-content{padding-inline:clamp(10px,3vw,16px);padding-bottom:96px}
+.card,.quran-hero,.audio-quran-hero,.settings-card,.dhikr-card{border-radius:var(--ui2-radius)}
+button,.app-button,.nav-item,.ayah-actions button,.reader-toolbar button{min-height:44px}
+/* Quran library */
+.quran-hero{padding:16px;margin-bottom:12px}.quran-tools{gap:8px;margin-block:10px}.quran-search{min-height:46px;border-radius:14px}
+.surah-list{display:grid;gap:8px}.surah-row{min-height:64px;padding:10px 12px;border-radius:14px;align-items:center}.surah-number{flex:0 0 38px;width:38px;height:38px}.surah-title{min-width:0}.surah-title strong{font-size:.98rem}.surah-title small{font-size:.72rem;opacity:.72}
+/* Reader: preserve all ayah actions, improve legibility */
+.reader-toolbar{position:sticky;top:0;z-index:15;padding:8px 4px;margin-bottom:8px;backdrop-filter:blur(12px)}
+.quran-verses{max-width:780px;margin-inline:auto}.ayah{padding:16px 12px;margin-bottom:9px;border-radius:14px}.ayah-text{line-height:2.15!important}.ayah-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.ayah-actions button{min-width:44px;padding:8px}
+.reader-settings{gap:8px}.reader-navigation{gap:8px;margin-block:14px 6px}.reader-navigation button{min-height:48px}
+/* Adhkar */
+.adhkar-category-actions{gap:8px}.dhikr-card{padding:15px;margin-bottom:10px}.dhikr-text{line-height:1.95}.counter-controls{gap:8px}.counter-btn{min-width:52px;min-height:48px}.adhkar-category-progress{margin-block:8px}
+/* Audio library/player */
+.audio-quran-hero{padding:16px}.audio-home-actions,.audio-options{gap:8px}.audio-reciter-grid{gap:9px}.audio-reciter-card,.audio-reciter-row{border-radius:14px;padding:11px}.audio-surah-list{display:grid;gap:7px}.audio-surah-row{min-height:54px;border-radius:12px}.audio-controls{gap:10px}.audio-play{width:58px;height:58px}.audio-progress{margin-block:10px}.audio-range{min-height:32px}
+/* More + settings */
+.more-grid{gap:10px}.more-card{min-height:78px;border-radius:15px;padding:12px}.settings-sections{display:grid;gap:9px}.settings-section{border-radius:14px;overflow:hidden}.settings-section summary{min-height:52px;padding:11px 13px}.settings-section-content{padding:8px}.settings-card{padding:13px;margin-bottom:9px}
+/* Home UI1: tighten without redesign */
+.home-v2{max-width:760px}.home-hero{padding:15px}.home-actions{gap:7px}.home-action{min-height:70px}.home-section{padding:12px}.home-ayah{padding:14px}
+/* Bottom nav */
+.bottom-nav{padding-bottom:max(6px,env(safe-area-inset-bottom));min-height:66px}.nav-item{padding:6px 3px}.nav-item span{font-size:.68rem}
+/* Prevent accidental horizontal overflow */
+#page-content,.main-content,.quran-verses,.surah-list,.audio-reciter-grid,.more-grid{min-width:0;max-width:100%}img,video,canvas{max-width:100%}
+@media(max-width:390px){.main-content{padding-inline:9px}.ayah{padding-inline:10px}.surah-row{padding-inline:9px}.more-grid{gap:7px}.more-card{padding:9px}.audio-reciter-card,.audio-reciter-row{padding:9px}}
+@media(min-width:700px){.surah-list,.audio-surah-list{max-width:760px;margin-inline:auto}.more-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}

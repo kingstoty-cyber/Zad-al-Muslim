@@ -1,0 +1,2 @@
+6d59af989b71b6d4161ee772d56ecfbdfbff96cd28fb59a2bf1e775bd59b8b96  Zad-al-Muslim-v4.9.3-beta.3-release-signed.apk
+4cac0d93abe56d2a3f72c19cce6f52877db70d12aec5c78aa50832f965c707f5  Zad-al-Muslim-v4.9.3-beta.3-release.aab

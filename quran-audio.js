@@ -75,7 +75,7 @@
         if (audio) return audio;
         audio = new Audio();
         audio.preload = 'metadata';
-        audio.addEventListener('play', () => { window.stopSurahAudio?.(); updateControls(); followCurrentAyah(); });
+        audio.addEventListener('play', () => { window.stopSurahAudio?.(); window.stopDhikrAudio?.(); updateControls(); followCurrentAyah(); });
         audio.addEventListener('pause', updateControls);
         audio.addEventListener('timeupdate', onTimeUpdate);
         audio.addEventListener('loadedmetadata', updateProgress);
@@ -430,9 +430,9 @@
         const query = String(search).trim().toLowerCase();
         const list = RECITERS.filter(item => {
             const matches = !query || `${item.name} ${item.quality} ${item.riwaya} ${item.style}`.toLowerCase().includes(query);
-            return matches && (filter === 'all' || filter === item.riwaya || (filter === 'favorite' && favorites.includes(item.id)) || (filter === 'recent' && recent.includes(item.id)));
+            return matches && (filter === 'all' || filter === item.riwaya || (filter === 'young' && item.group === 'young') || (filter === 'favorite' && favorites.includes(item.id)) || (filter === 'recent' && recent.includes(item.id)));
         }).sort((a,b) => (favorites.includes(b.id)-favorites.includes(a.id)) || a.name.localeCompare(b.name,'ar'));
-        box.innerHTML = `<div class="card-title"><i class="fas fa-microphone-lines"></i> مكتبة القرّاء <button onclick="document.getElementById('reciter-library').remove()" aria-label="إغلاق"><i class="fas fa-xmark"></i></button></div><div class="reciter-tools"><input id="reciter-search" type="search" placeholder="ابحث باسم القارئ" value="${escapeValue(search)}" oninput="filterReciterLibrary(this.value)"><select id="reciter-filter" onchange="filterReciterLibrary(document.getElementById('reciter-search').value,this.value)"><option value="all">الكل (${RECITERS.length})</option><option value="حفص">رواية حفص</option><option value="ورش">رواية ورش</option><option value="favorite">المفضلة</option><option value="recent">المستخدمة مؤخرًا</option></select></div><div class="reciter-list">${list.map(item => `<article><button class="reciter-favorite" onclick="event.stopPropagation();toggleQuranReciterFavorite('${item.id}')" aria-label="المفضلة"><i class="${favorites.includes(item.id)?'fas':'far'} fa-star"></i></button><button class="reciter-choice" onclick="selectQuranReciter('${item.id}')"><strong>${item.name}</strong><small>${item.riwaya} • ${item.style} • ${item.quality}</small></button></article>`).join('') || '<p class="quran-empty">لا توجد نتائج مطابقة.</p>'}</div>`;
+        box.innerHTML = `<div class="card-title"><i class="fas fa-microphone-lines"></i> مكتبة القرّاء <button onclick="document.getElementById('reciter-library').remove()" aria-label="إغلاق"><i class="fas fa-xmark"></i></button></div><div class="reciter-tools"><input id="reciter-search" type="search" placeholder="ابحث باسم القارئ" value="${escapeValue(search)}" oninput="filterReciterLibrary(this.value)"><select id="reciter-filter" onchange="filterReciterLibrary(document.getElementById('reciter-search').value,this.value)"><option value="all">الكل (${RECITERS.length})</option><option value="حفص">رواية حفص</option><option value="ورش">رواية ورش</option><option value="young">القراء الشباب</option><option value="favorite">المفضلة</option><option value="recent">المستخدمة مؤخرًا</option></select></div><div class="reciter-list">${list.map(item => `<article><button class="reciter-favorite" onclick="event.stopPropagation();toggleQuranReciterFavorite('${item.id}')" aria-label="المفضلة"><i class="${favorites.includes(item.id)?'fas':'far'} fa-star"></i></button><button class="reciter-choice" onclick="selectQuranReciter('${item.id}')"><strong>${item.name}</strong><small>${item.riwaya} • ${item.style} • ${item.quality}</small></button></article>`).join('') || '<p class="quran-empty">لا توجد نتائج مطابقة.</p>'}</div>`;
         const select = document.getElementById('reciter-filter'); if (select) select.value = filter;
     }
 

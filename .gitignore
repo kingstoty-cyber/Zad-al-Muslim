@@ -1,5 +1,10 @@
 node_modules/
-android/
-www/
 *.keystore
 *.jks
+www/
+android/.gradle/
+android/local.properties
+android/**/build/
+*.apk
+*.aab
+*.idsig

@@ -1,0 +1,3 @@
+c52f0cc9a3cb8d9a1d99ca1cd3b9fc1fd04cc7812f049139d92b9b481cd4b87c  Zad-Al-Muslim-UI12-debug.apk
+ec0f050ca29f1bc48f19b571d2de7e0f3deabe7086ca4be0eb919ddaca90f4b0  Zad-Al-Muslim-UI12-release-signed.apk
+c1d4501321843257a2d5b5c9d2ad16a4dcc0b824618cef66e5774d76a1e3ca1a  Zad-Al-Muslim-UI12-release.aab

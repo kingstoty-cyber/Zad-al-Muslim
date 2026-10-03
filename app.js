@@ -56,6 +56,13 @@ function setupManualLocationPanel() {
     const cityInput = document.getElementById('manual-city');
     if (!toggleBtn || !panel || !saveBtn || !clearBtn || !latInput || !lonInput || !cityInput) return;
 
+    cityInput.addEventListener('change', () => {
+        const city = [...document.querySelectorAll('#manual-city-options option')].find(option => option.value === cityInput.value);
+        if (!city) return;
+        latInput.value = city.dataset.lat || '';
+        lonInput.value = city.dataset.lon || '';
+    });
+
     const closePanel = () => { panel.style.display = 'none'; };
     toggleBtn.addEventListener('click', () => {
         const saved = getManualLocation();
@@ -84,7 +91,7 @@ function setupManualLocationPanel() {
     clearBtn.addEventListener('click', () => {
         if (!confirm('هل تريد إزالة الموقع اليدوي؟')) return;
         clearManualLocation();
-        alert('تمت إزالة الموقع اليدوي. سيُطلب GPS عند التحديث التالي، ولن تُعرض أوقات محلية تخمينية.');
+        alert('تمت إزالة الموقع اليدوي. يمكنك اختيار مدينة أخرى أو استخدام موقعي من صفحة الصلاة.');
         closePanel();
         window.renderHome?.();
     });
@@ -106,16 +113,14 @@ function loadCachedTimes() {
 // تحقق ما إذا كنا بحاجة لتحديث (مثلاً عند تغيير الموقع اليدوي)
 function needsUpdateForManualLocation() {
     const cached = loadCachedTimes();
-    const manual = getManualLocation();
+    let saved = null;
+    try { saved = getManualLocation() || JSON.parse(localStorage.getItem('user_location') || 'null'); } catch (_) {}
+    if (!saved) return false;
     if (!cached) return true;
     if (cached.date !== new Date().toDateString()) return true;
-    if (manual) {
-        const cachedLoc = cached.location || {};
-        const latDiff = Math.abs((cachedLoc.lat || 0) - manual.lat);
-        const lonDiff = Math.abs((cachedLoc.lon || 0) - manual.lon);
-        if (latDiff > 0.01 || lonDiff > 0.01) return true;
-    }
-    return false;
+    const cachedLoc = cached.location || {};
+    return Math.abs((cachedLoc.lat || 0) - Number(saved.lat)) > 0.01 ||
+        Math.abs((cachedLoc.lon || 0) - Number(saved.lon)) > 0.01;
 }
 
 // ========== الدوال الأساسية ==========
@@ -197,112 +202,16 @@ class PrayerTimesCalculator {
         return methods[this.method] || methods['UmmAlQura'];
     }
 
-    // دالة لتحديد الموقع عبر IP (بدون إذن)
-    async getLocationByIP() {
-        try {
-            console.log("جاري تحديد الموقع عبر IP...");
-            const response = await fetch('https://ipapi.co/json/');
-            const data = await response.json();
-            
-            if (data.latitude && data.longitude) {
-                this.latitude = data.latitude;
-                this.longitude = data.longitude;
-                
-                const locationData = {
-                    lat: this.latitude,
-                    lon: this.longitude,
-                    city: data.city,
-                    country: data.country_name,
-                    source: 'ip',
-                    timestamp: Date.now()
-                };
-                localStorage.setItem('user_location', JSON.stringify(locationData));
-                
-                console.log("تم تحديد الموقع عبر IP:", this.latitude, this.longitude, `(${data.city}, ${data.country_name})`);
-                return true;
-            }
-            return false;
-        } catch (error) {
-            console.log("فشل تحديد الموقع عبر IP:", error);
-            return false;
-        }
-    }
-
     // تعديل: استخدام الموقع اليدوي أولاً لتقليل التعقيد والمشكلات
     async getLocation() {
-        return new Promise(async (resolve, reject) => {
-            // 0) استخدام الموقع اليدوي إذا وُجد
-            const manual = getManualLocation();
-            if (manual) {
-                this.latitude = manual.lat;
-                this.longitude = manual.lon;
-                // حفظ نسخة في user_location لعرض المصدر في الواجهة
-                const locationData = {
-                    lat: this.latitude,
-                    lon: this.longitude,
-                    city: manual.city || null,
-                    source: 'manual',
-                    timestamp: Date.now()
-                };
-                localStorage.setItem('user_location', JSON.stringify(locationData));
-                console.log("استخدام الموقع اليدوي:", locationData);
-                resolve(true);
-                return;
-            }
-
-            // إن لم يكن هناك موقع يدوي: مثل سلوكك الأصلي (GPS ثم IP)
-            if (!navigator.geolocation) {
-                console.log("Geolocation غير مدعوم في هذا المتصفح");
-                const ipSuccess = await this.getLocationByIP();
-                resolve(ipSuccess);
-                return;
-            }
-
-            navigator.geolocation.getCurrentPosition(
-                async (position) => {
-                    this.latitude = position.coords.latitude;
-                    this.longitude = position.coords.longitude;
-                    
-                    const locationData = {
-                        lat: this.latitude,
-                        lon: this.longitude,
-                        source: 'gps',
-                        timestamp: Date.now()
-                    };
-                    localStorage.setItem('user_location', JSON.stringify(locationData));
-                    
-                    console.log("تم تحديد الموقع عبر GPS:", this.latitude, this.longitude);
-                    resolve(true);
-                },
-                async (error) => {
-                    console.log("خطأ في GPS:", error.message);
-                    
-                    // التحقق من الرسالة الخطأ
-                    let errorMsg = "خطأ غير معروف";
-                    switch(error.code) {
-                        case 1:
-                            errorMsg = "تم رفض إذن الموقع. جاري استخدام IP...";
-                            break;
-                        case 2:
-                            errorMsg = "لا يمكن الوصول إلى معلومات الموقع. جاري استخدام IP...";
-                            break;
-                        case 3:
-                            errorMsg = "انتهت المهلة. جاري استخدام IP...";
-                            break;
-                    }
-                    console.log(errorMsg);
-                    
-                    // استخدام IP كبديل
-                    const ipSuccess = await this.getLocationByIP();
-                    resolve(ipSuccess);
-                },
-                { 
-                    enableHighAccuracy: true, 
-                    timeout: 8000, 
-                    maximumAge: 0 
-                }
-            );
-        });
+        const saved = getManualLocation() || (() => {
+            try { return JSON.parse(localStorage.getItem('user_location') || 'null'); }
+            catch (_) { return null; }
+        })();
+        if (!saved || !Number.isFinite(Number(saved.lat)) || !Number.isFinite(Number(saved.lon))) return false;
+        this.latitude = Number(saved.lat);
+        this.longitude = Number(saved.lon);
+        return true;
     }
 
     // دالة لجلب مواقيت الصلاة من API
@@ -412,8 +321,7 @@ class PrayerTimesCalculator {
                 times = this.computePrayerTimes();
             }
         } else {
-            console.log("فشل تحديد الموقع، استخدام الأوقات المحسوبة محلياً");
-            times = this.computePrayerTimes();
+            throw new Error("حدد موقعك من واجهة الصلاة قبل تحديث المواقيت.");
         }
 
         const cacheData = {
@@ -463,30 +371,6 @@ async function updatePrayerTimes() {
         console.log("استخدام الأوقات الافتراضية:", error);
         return false;
     }
-}
-
-// ========== طلب إذن الموقع ==========
-
-async function requestLocationPermission() {
-    return new Promise((resolve, reject) => {
-        if (!navigator.geolocation) {
-            console.log("Geolocation غير مدعوم");
-            resolve(false);
-            return;
-        }
-        
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                console.log("تم منح إذن الموقع:", position.coords);
-                resolve(true);
-            },
-            (error) => {
-                console.log("تم رفض إذن الموقع:", error.message);
-                resolve(false);
-            },
-            { enableHighAccuracy: false, timeout: 5000 }
-        );
-    });
 }
 
 // دالة مع ردود فعل للتحديث (تم تعديلها لاستخدام الموقع اليدوي إن وُجد)
@@ -764,13 +648,13 @@ function getAllDhikr() {
     return Object.values(AdhkarDB).flat();
 }
 
-let activeDhikrCategory = Storage.load('adhkar_active_category') || 'morning';
+let activeDhikrCategory = Storage.load('adhkar_active_category') || 'azkari_1';
 
 function ensureDailyAdhkarProgress() {
     const today = new Date().toISOString().slice(0, 10);
     if (Storage.load('adhkar_progress_day') === today) return;
     const progress = Storage.load('adhkar_progress') || {};
-    [...(AdhkarDB.morning || []), ...(AdhkarDB.evening || [])].forEach(item => delete progress[item.id]);
+    [...(AdhkarDB.azkari_1 || []), ...(AdhkarDB.azkari_2 || [])].forEach(item => delete progress[item.id]);
     Storage.save('adhkar_progress', progress);
     Storage.save('adhkar_progress_day', today);
 }
@@ -783,122 +667,72 @@ function getDhikrCategoryProgress(category, progress) {
     return { total, current, completed, percentage: total ? Math.round((current / total) * 100) : 0 };
 }
 
-function renderAdhkar(category = 'morning') {
-    if (!AdhkarDB[category]) category = 'morning';
-    ensureDailyAdhkarProgress();
-    activeDhikrCategory = category;
-    Storage.save('adhkar_active_category', category);
-    const content = document.getElementById('page-content');
-    content.className = 'fade-in';
-    
-    const categories = {
-        morning: { name: 'أذكار الصباح', icon: 'fa-sun' },
-        evening: { name: 'أذكار المساء', icon: 'fa-moon' },
-        afterPrayer: { name: 'أذكار بعد الصلاة', icon: 'fa-mosque' },
-        sleeping: { name: 'أذكار النوم', icon: 'fa-bed' },
-        wakingUp: { name: 'أذكار الاستيقاظ', icon: 'fa-alarm-clock' }
-    };
-
-    const adhkarProgress = Storage.load('adhkar_progress') || {};
-    const categoryProgress = getDhikrCategoryProgress(category, adhkarProgress);
-    
-    let html = `
-        <div class="card">
-            <div class="card-title" style="justify-content: center;">
-                <i class="fas ${categories[category].icon}"></i> ${categories[category].name}
-            </div>
-            
-            <div class="tab-buttons">
-                ${Object.entries(categories).map(([key, cat]) => `
-                    <button class="tab-btn ${category === key ? 'active' : ''}" 
-                            onclick="renderAdhkar('${key}')">
-                        <i class="fas ${cat.icon}"></i> ${cat.name}
-                    </button>
-                `).join('')}
-            </div>
-            
-            <div style="text-align: center; margin: 15px 0;">
-                <div style="display: inline-flex; gap: 15px; background: rgba(255,255,255,0.05); 
-                     padding: 10px 20px; border-radius: 20px;">
-                    <div>
-                        <div style="font-size: 1.2rem; color: var(--primary-color);">
-                            ${Object.values(adhkarProgress).filter(v => v && v.completed).length}
-                        </div>
-                        <div style="font-size: 0.7rem;">أذكار مكتملة</div>
-                    </div>
-                    <div style="border-left: 1px solid var(--soft-white); padding-left: 15px;">
-                        <div style="font-size: 1.2rem; color: var(--secondary-color);">
-                            ${Object.values(AdhkarDB).flat().length}
-                        </div>
-                        <div style="font-size: 0.7rem;">مجموع الأذكار</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="adhkar-category-progress">
-                <div><strong>${categoryProgress.completed}</strong> من ${AdhkarDB[category].length} ذكر مكتمل</div>
-                <div><strong>${categoryProgress.current}</strong> من ${categoryProgress.total} تكرار</div>
-            </div>
-            <div class="progress-bar"><div class="progress-fill" style="width:${categoryProgress.percentage}%"></div></div>
-            <div class="adhkar-category-actions">
-                <button class="tab-btn" onclick="completeDhikrCategory('${category}')"><i class="fas fa-check-double"></i> إكمال القسم</button>
-                <button class="tab-btn danger" onclick="resetDhikrCategory('${category}')"><i class="fas fa-rotate-left"></i> تصفير القسم</button>
-            </div>
-        </div>
-    `;
-    
-    AdhkarDB[category].forEach(item => {
-        const progress = adhkarProgress[item.id] || { current: 0, completed: false };
-        const percentage = (progress.current / item.count) * 100;
-        
-        html += `
-            <div class="card dhikr-card" id="adhkar-${item.id}">
-                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
-                    <div class="card-title" style="margin: 0;">
-                        <i class="fas fa-quote-right"></i> ${item.reference}
-                    </div>
-                    <div style="font-size: 0.8rem; color: var(--accent-color); background: rgba(52,152,219,0.1); 
-                         padding: 2px 8px; border-radius: 10px;">
-                        ${item.times}
-                    </div>
-                </div>
-                
-                <div class="dhikr-text">${item.text}</div>
-                
-                <div style="margin: 15px 0;">
-                    <div class="progress-bar">
-                        <div class="progress-fill" style="width: ${percentage}%"></div>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-top: 5px;">
-                        <span>${progress.current} من ${item.count}</span>
-                        <span style="color: var(--primary-color);">${Math.round(percentage)}%</span>
-                    </div>
-                </div>
-                
-                <div class="counter-controls">
-                    <button class="counter-btn" onclick="updateDhikrCount(${item.id}, -1)" 
-                            ${progress.completed ? 'disabled style="opacity:0.5"' : ''}>
-                        <i class="fas fa-minus"></i>
-                    </button>
-                    
-                    <div style="display: flex; gap: 10px;">
-                        <button class="complete-btn" onclick="completeDhikrNow(${item.id})" 
-                                ${progress.completed ? 'disabled style="opacity:0.5"' : ''}>
-                            ${progress.completed ? '✓ مكتمل' : 'إكمال الذكر'}
-                        </button>
-                    </div>
-                    
-                    <button class="counter-btn" onclick="updateDhikrCount(${item.id}, 1)" 
-                            ${progress.completed ? 'disabled style="opacity:0.5"' : ''}>
-                        <i class="fas fa-plus"></i>
-                    </button>
-                </div>
-            </div>
-        `;
-    });
-    
-    content.innerHTML = html;
+function renderAdhkar(category = 'azkari_1') {
+    const importedCategories = window.ImportedAdhkarCategories || (typeof ImportedAdhkarCategories !== 'undefined' ? ImportedAdhkarCategories : []);
+    if (!AdhkarDB[category]) category = importedCategories[0]?.key || 'azkari_1';
+    ensureDailyAdhkarProgress(); activeDhikrCategory = category; Storage.save('adhkar_active_category', category);
+    const content=document.getElementById('page-content'); content.className='fade-in adhkar-page';
+    const progress=Storage.load('adhkar_progress')||{}, cp=getDhikrCategoryProgress(category,progress), current=importedCategories.find(c=>c.key===category)||{name:'الأذكار'};
+    const featured=['azkari_1','azkari_2','azkari_4','azkari_5','azkari_6','azkari_11'];
+    const featuredRows=importedCategories.filter(c=>featured.includes(c.key));
+    let html=`<section class="card adhkar-hub" id="adhkar-hub"><div class="adhkar-hub-head"><div class="card-title"><i class="fas fa-book-open"></i> <span>${current.name}</span></div><button class="adhkar-hub-toggle" type="button" onclick="toggleAdhkarHub()" aria-label="طي أو فتح أدوات الأقسام"><i class="fas fa-chevron-up"></i></button></div><div class="adhkar-hub-body">
+      <label class="adhkar-search"><i class="fas fa-search"></i><input type="search" placeholder="ابحث في الأذكار والأقسام" oninput="filterImportedAdhkar(this.value)"></label>
+      <div class="adhkar-featured">${featuredRows.map(c=>`<button class="tab-btn ${category===c.key?'active':''}" onclick="renderAdhkar('${c.key}')">${c.name}</button>`).join('')}</div>
+      <select class="adhkar-category-select" aria-label="كل أقسام الأذكار" onchange="if(this.value) renderAdhkar(this.value)"><option value="">كل الأقسام (${importedCategories.length})</option>${importedCategories.map(c=>`<option value="${c.key}" ${category===c.key?'selected':''}>${c.name}</option>`).join('')}</select>
+      <div id="adhkar-search-results"></div>
+      <div class="adhkar-category-progress"><div><strong>${cp.completed}</strong> من ${AdhkarDB[category]?.length||0} مكتمل</div><div><strong>${cp.current}</strong> من ${cp.total} تكرار</div></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${cp.percentage}%"></div></div>
+      <div class="adhkar-category-actions"><button class="tab-btn" onclick="completeDhikrCategory('${category}')"><i class="fas fa-check-double"></i> إكمال القسم</button><button class="tab-btn danger" onclick="resetDhikrCategory('${category}')"><i class="fas fa-rotate-left"></i> تصفير</button></div></div></section>`;
+    (AdhkarDB[category]||[]).forEach(item=>{const st=progress[item.id]||{current:0,completed:false},pct=item.count?Math.min(100,st.current/item.count*100):0; html+=`<article class="card dhikr-card" id="adhkar-${item.id}"><div class="dhikr-card-head"><strong>${item.sourceCategory||current.name}</strong><span>${item.times||`${item.count} مرة`}</span></div><div class="dhikr-text">${item.text}</div>${item.reference?`<small class="dhikr-reference">${item.reference}</small>`:''}<div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div><div class="dhikr-audio-row">${item.audio?`<button class="tab-btn dhikr-audio-btn" onclick="toggleDhikrAudio(${item.id}, '${item.audio}')"><i class="fas fa-play" id="dhikr-audio-icon-${item.id}"></i> <span id="dhikr-audio-label-${item.id}">استماع</span></button>`:'<small>لا يوجد تسجيل لهذا الذكر</small>'}<label class="adhkar-autoplay"><input type="checkbox" ${dhikrAutoNext?'checked':''} onchange="setDhikrAutoNext(this.checked)"> متابعة تلقائية</label></div><div class="counter-controls"><button class="counter-btn" onclick="updateDhikrCount(${item.id},-1)" ${st.completed?'disabled':''}><i class="fas fa-minus"></i></button><button class="complete-btn" onclick="completeDhikrNow(${item.id})" ${st.completed?'disabled':''}>${st.completed?'✓ مكتمل':`${st.current} / ${item.count}`}</button><button class="counter-btn" onclick="updateDhikrCount(${item.id},1)" ${st.completed?'disabled':''}><i class="fas fa-plus"></i></button></div></article>`});
+    content.innerHTML=html; syncDhikrAudioUI(); setupAdhkarCollapsibleHub();
 }
+let adhkarHubScrollHandler=null;
+function setAdhkarHubCollapsed(collapsed){
+    const hub=document.getElementById('adhkar-hub'); if(!hub)return;
+    hub.classList.toggle('collapsed',!!collapsed);
+    const icon=hub.querySelector('.adhkar-hub-toggle i'); if(icon)icon.className=`fas fa-chevron-${collapsed?'down':'up'}`;
+}
+function toggleAdhkarHub(){const hub=document.getElementById('adhkar-hub');if(hub)setAdhkarHubCollapsed(!hub.classList.contains('collapsed'))}
+function setupAdhkarCollapsibleHub(){
+    if(adhkarHubScrollHandler)window.removeEventListener('scroll',adhkarHubScrollHandler);
+    const hub=document.getElementById('adhkar-hub'); if(!hub)return;
+    const threshold=hub.getBoundingClientRect().top+window.scrollY+90;
+    adhkarHubScrollHandler=()=>{if(!document.getElementById('adhkar-hub')){window.removeEventListener('scroll',adhkarHubScrollHandler);adhkarHubScrollHandler=null;return}setAdhkarHubCollapsed(window.scrollY>threshold)};
+    window.addEventListener('scroll',adhkarHubScrollHandler,{passive:true}); adhkarHubScrollHandler();
+}
+window.toggleAdhkarHub=toggleAdhkarHub;
+
+function filterImportedAdhkar(query){
+    const q=String(query||'').trim(), box=document.getElementById('adhkar-search-results'); if(!box)return; if(!q){box.innerHTML='';return}
+    const cats=window.ImportedAdhkarCategories||[]; const matches=[]; cats.forEach(c=>(AdhkarDB[c.key]||[]).forEach(i=>{if((c.name+' '+i.text+' '+(i.reference||'')).includes(q))matches.push({c,i})}));
+    box.innerHTML=`<div class="adhkar-search-list">${matches.slice(0,20).map(({c,i})=>`<button onclick="renderAdhkar('${c.key}');setTimeout(()=>document.getElementById('adhkar-${i.id}')?.scrollIntoView({behavior:'smooth'}),50)"><strong>${c.name}</strong><small>${i.text.slice(0,90)}${i.text.length>90?'…':''}</small></button>`).join('')||'<p>لا توجد نتائج.</p>'}</div>`;
+}
+let activeDhikrAudio=null, activeDhikrAudioId=null, activeDhikrAudioCategory=null;
+let dhikrAutoNext=Storage.load('adhkar_audio_autonext')!==false;
+function setDhikrAutoNext(value){dhikrAutoNext=!!value;Storage.save('adhkar_audio_autonext',dhikrAutoNext);document.querySelectorAll('.adhkar-autoplay input').forEach(x=>x.checked=dhikrAutoNext)}
+function dhikrItem(id){for(const [category,items] of Object.entries(AdhkarDB)){const item=items.find(x=>x.id===id);if(item)return{item,category}}return null}
+function emitDhikrState(){if(!activeDhikrAudio||!activeDhikrAudioId)return;const hit=dhikrItem(activeDhikrAudioId);window.dispatchEvent(new CustomEvent('zad:audio-state',{detail:{kind:'dhikr',playing:!activeDhikrAudio.paused,currentTime:activeDhikrAudio.currentTime||0,duration:Number.isFinite(activeDhikrAudio.duration)?activeDhikrAudio.duration:0,title:hit?.item?.sourceCategory||'الأذكار',subtitle:(hit?.item?.text||'ذكر مسموع').slice(0,70)}}))}
+function syncDhikrAudioUI(){document.querySelectorAll('.dhikr-audio-btn').forEach(b=>{const id=Number(b.getAttribute('onclick')?.match(/\((\d+)/)?.[1]);const icon=document.getElementById(`dhikr-audio-icon-${id}`),label=document.getElementById(`dhikr-audio-label-${id}`);if(!icon||!label)return;const active=id===activeDhikrAudioId;icon.className=`fas fa-${active&&!activeDhikrAudio?.paused?'pause':'play'}`;label.textContent=active?(activeDhikrAudio?.paused?'متابعة':'إيقاف'):'استماع'})}
+function stopDhikrAudio(reset=true){if(activeDhikrAudio){activeDhikrAudio.pause();if(reset)activeDhikrAudio.currentTime=0}if(reset){activeDhikrAudio=null;activeDhikrAudioId=null;activeDhikrAudioCategory=null}syncDhikrAudioUI()}
+function completeDhikrFromAudio(id){
+    const hit=dhikrItem(id); if(!hit)return;
+    const progress=Storage.load('adhkar_progress')||{};
+    progress[id]={current:hit.item.count,completed:true,lastCompleted:new Date().toISOString(),completedBy:'audio'};
+    Storage.save('adhkar_progress',progress);
+    const card=document.getElementById(`adhkar-${id}`); if(card){
+        card.classList.add('dhikr-audio-completed');
+        const fill=card.querySelector('.progress-fill'); if(fill)fill.style.width='100%';
+        const done=card.querySelector('.complete-btn'); if(done){done.textContent='✓ مكتمل بالسماع';done.disabled=true}
+    }
+}
+function playDhikrAudio(id,src){
+    const same=activeDhikrAudioId===id&&activeDhikrAudio; if(!same){stopDhikrAudio();window.stopQuranAyahAudio?.();window.stopSurahAudio?.();activeDhikrAudio=new Audio(src);activeDhikrAudioId=id;activeDhikrAudioCategory=dhikrItem(id)?.category||activeDhikrCategory;activeDhikrAudio.preload='auto';activeDhikrAudio.addEventListener('timeupdate',emitDhikrState);activeDhikrAudio.addEventListener('play',()=>{window.stopQuranAyahAudio?.();window.stopSurahAudio?.();syncDhikrAudioUI();emitDhikrState()});activeDhikrAudio.addEventListener('pause',()=>{syncDhikrAudioUI();emitDhikrState()});activeDhikrAudio.addEventListener('ended',()=>{completeDhikrFromAudio(id);const cat=activeDhikrAudioCategory,list=AdhkarDB[cat]||[],idx=list.findIndex(x=>x.id===id),next=dhikrAutoNext?list.slice(idx+1).find(x=>x.audio):null;if(next)playDhikrAudio(next.id,next.audio);else stopDhikrAudio()});activeDhikrAudio.addEventListener('error',()=>{stopDhikrAudio();window.showToast?.('تعذر تشغيل هذا التسجيل')})}
+    activeDhikrAudio.play().catch(()=>window.showToast?.('تعذر بدء الصوت')); syncDhikrAudioUI();
+}
+function toggleDhikrAudio(id,src){if(activeDhikrAudioId===id&&activeDhikrAudio){activeDhikrAudio.paused?activeDhikrAudio.play():activeDhikrAudio.pause();return}playDhikrAudio(id,src)}
+function dhikrAudioNext(){if(!activeDhikrAudioId)return;const hit=dhikrItem(activeDhikrAudioId),list=AdhkarDB[hit?.category]||[],idx=list.findIndex(x=>x.id===activeDhikrAudioId),next=list.slice(idx+1).find(x=>x.audio);if(next)playDhikrAudio(next.id,next.audio)}
+function dhikrAudioPrevious(){if(!activeDhikrAudioId)return;const hit=dhikrItem(activeDhikrAudioId),list=AdhkarDB[hit?.category]||[],idx=list.findIndex(x=>x.id===activeDhikrAudioId),prev=list.slice(0,idx).reverse().find(x=>x.audio);if(prev)playDhikrAudio(prev.id,prev.audio)}
+window.stopDhikrAudio=stopDhikrAudio;window.toggleDhikrAudio=toggleDhikrAudio;window.dhikrAudioNext=dhikrAudioNext;window.dhikrAudioPrevious=dhikrAudioPrevious;window.toggleDhikrGlobal=()=>{if(activeDhikrAudio)activeDhikrAudio.paused?activeDhikrAudio.play():activeDhikrAudio.pause()};window.filterImportedAdhkar=filterImportedAdhkar;window.setDhikrAutoNext=setDhikrAutoNext;
 
 function updateDhikrCount(id, change) {
     const dhikr = getAllDhikr().find(d => d.id === id);
@@ -1449,7 +1283,7 @@ function renderSettings() {
 
         <div class="card">
             <div class="card-title"><i class="fas fa-circle-info"></i> حول التطبيق</div>
-            <p>تطبيق <span style="color: var(--primary-color)">زاد المسلم</span> - الإصدار ${window.ZAD_APP?.version || '4.9.3-beta.4'}</p>
+            <p>تطبيق <span style="color: var(--primary-color)">زاد المسلم</span> - الإصدار ${window.ZAD_APP?.version || '4.9.3-beta.5.2'}</p>
             <p style="font-size: 0.9rem; line-height: 1.6;">
                 تطبيق متكامل لمتابعة العبادات اليومية، الأذكار، وقراءة القرآن الكريم.<br>
                 يعمل دون اتصال في القرآن والأذكار بعد التحميل الأول ويحفظ تقدمك محلياً.<br>
@@ -1525,7 +1359,7 @@ function renderMore() {
         ['fa-palette', 'المظهر', 'اختيار الألوان ووضع القراءة', "loadTab('themes')"],
         ['fa-user-gear', 'الإعدادات', 'التنبيهات والبيانات والخصوصية', "loadTab('settings')"],
         ['fa-download', 'التنزيلات', 'إدارة التلاوات المحفوظة', 'renderAudioDownloads()'],
-        ['fa-mobile-screen-button', 'تطبيق Android', 'v4.9.3-beta.4 — APK وAAB عند اكتمال البناء', "window.open('https://github.com/kingstoty-cyber/Zad-al-Muslim/releases/latest','_blank','noopener')"]
+        ['fa-mobile-screen-button', 'تطبيق Android', '4.9.3-beta.5.2 — إصلاحات الاستقرار والتحديث', "window.open('https://github.com/kingstoty-cyber/Zad-al-Muslim/actions/workflows/android-apk.yml','_blank','noopener')"]
     ];
     content.innerHTML = `
         <div class="simple-page-heading">
@@ -1589,37 +1423,35 @@ window.onload = async () => {
     const themeEl = document.getElementById('current-theme');
     if (themeEl) themeEl.style.cssText = "font-size: 0.9rem; color: var(--primary-color); margin-top: 5px;";
     
-    // 4. تحميل مواقيت الصلاة عند التحميل فقط إذا احتجنا لذلك (تحديث يومي أو عند تغيير الموقع اليدوي)
+    // 4. تحميل المواقيت من موقع محفوظ مسبقًا فقط؛ لا نطلب إذنًا أو موقع IP عند بدء التطبيق.
     console.log("بدء تحميل التطبيق...");
     setTimeout(async () => {
         try {
-            if (needsUpdateForManualLocation()) {
-                console.log("جاري تحديث مواقيت الصلاة (مطالب بالتحديث)...");
-                await updatePrayerTimes();
+            let savedLocation = null;
+            try { savedLocation = getManualLocation() || JSON.parse(localStorage.getItem('user_location') || 'null'); } catch (_) {}
+            if (savedLocation && needsUpdateForManualLocation()) {
+                console.log("جاري تحديث مواقيت الصلاة لموقع محفوظ مسبقًا...");
+                await window.updatePrayerTimes?.();
             } else {
-                console.log("استخدام الكاش الحالي لمواقيت اليوم");
-                // تحميل الكاش إلى PrayerTimes لعرضها فوراً
+                console.log(savedLocation ? "استخدام الكاش الحالي لمواقيت اليوم" : "لم يُختر موقع بعد؛ الإذن لا يُطلب إلا بعد ضغط المستخدم");
                 const cached = loadCachedTimes();
-                if (cached && cached.times) {
-                    const times = cached.times;
+                if (cached?.times) {
                     PrayerTimes = [
-                        { name: "الفجر", time: times.fajr },
-                        { name: "الشروق", time: times.sunrise },
-                        { name: "الظهر", time: times.dhuhr },
-                        { name: "العصر", time: times.asr },
-                        { name: "المغرب", time: times.maghrib },
-                        { name: "العشاء", time: times.isha }
+                        { name: "الفجر", time: cached.times.fajr },
+                        { name: "الشروق", time: cached.times.sunrise },
+                        { name: "الظهر", time: cached.times.dhuhr },
+                        { name: "العصر", time: cached.times.asr },
+                        { name: "المغرب", time: cached.times.maghrib },
+                        { name: "العشاء", time: cached.times.isha }
                     ];
                 }
             }
             console.log("اكتمل تحميل التطبيق");
-        } catch (e) {
-            console.error("خطأ أثناء التحميل المبدئي:", e);
-        }
+        } catch (e) { console.error("خطأ أثناء التحميل المبدئي:", e); }
     }, 800);
     
     // 5. تحميل الصفحة الرئيسية
-    renderHome();
+    (window.renderHome || renderHome)();
     
     // 6. تحديث التاريخ كل دقيقة
     setInterval(() => {
@@ -1629,12 +1461,15 @@ window.onload = async () => {
     
     // 7. تحديث مواقيت الصلاة كل 6 ساعات (اختياري)
     setInterval(async () => {
-        console.log("تحديث دوري لمواقيت الصلاة...");
-        await updatePrayerTimes();
+        let savedLocation = null;
+        try { savedLocation = getManualLocation() || JSON.parse(localStorage.getItem('user_location') || 'null'); } catch (_) {}
+        if (savedLocation) {
+            console.log("تحديث دوري للمواقيت باستخدام موقع محفوظ مسبقًا...");
+            await window.updatePrayerTimes?.();
+        }
     }, 6 * 3600000);
     
-    // 8. إعداد مستمع التمرير
-    window.addEventListener('scroll', handleScroll);
+    // 8. لا يوجد زر صعود عائم في Beta 5؛ لذلك لا نربط مستمع تمرير قديم.
     
     // 9. طلب إذن الإشعارات
     // يطلب إذن الإشعارات من زر واضح داخل الإعدادات فقط، لأن المتصفحات
@@ -1647,14 +1482,7 @@ window.onload = async () => {
         }, 3600000); // التحقق كل ساعة
     }
     
-    // 11. إعداد أحداث التنقل
-    document.querySelectorAll('.nav-item').forEach(item => {
-        item.addEventListener('click', () => {
-            const tab = item.dataset.tab;
-            if (AppState.currentTab === tab) { scrollToTop(); return; }
-            loadTab(tab);
-        });
-    });
+    // 11. التنقل السفلي يُدار مركزيًا في app-shell.js حتى لا يتعطل إذا فشل جزء آخر من onload.
 };
 
 // تصدير الدوال للاستخدام العام (أضفت دوال الموقع اليدوي لاستخدامها من الواجهة)

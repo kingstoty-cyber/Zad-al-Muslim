@@ -15,6 +15,7 @@
     let quranData = null;
     let chapters = null;
     let currentSurah = null;
+    let currentAyahElement = null;
 
     function readJson(key, fallback) {
         try { return JSON.parse(localStorage.getItem(key)) ?? fallback; }
@@ -104,7 +105,7 @@
                     </article>`;
                 }).join('') || '<div class="quran-empty">لا توجد سورة مطابقة.</div>'}
             </div>
-            <p class="quran-attribution">النص القرآني من مشروع Tanzil، نُقل دون تغيير. الإصدار v${window.ZAD_APP?.version || '4.9.3-beta.4'}</p>`;
+            <p class="quran-attribution">النص القرآني من مشروع Tanzil، نُقل دون تغيير. الإصدار v${window.ZAD_APP?.version || '4.9.3-beta.5.2'}</p>`;
     }
 
     function openSurah(surahId, ayahNumber = 1) {
@@ -116,6 +117,7 @@
         const fontSize = Number(localStorage.getItem(KEYS.fontSize)) || 30;
         const completed = readJson(KEYS.completed, []);
         const isDone = completed.includes(surahId);
+        const marked = new Set(readJson(KEYS.bookmarks, []).map(item => `${item.surah}:${item.ayah}`));
         const content = document.getElementById('page-content');
         content.innerHTML = `
             <div class="reader-toolbar">
@@ -129,7 +131,7 @@
             <div class="surah-ornament"><span>سورة</span><h2>${escapeHtml(chapter.name)}</h2></div>
             ${opening.basmala ? `<div class="bismillah">${escapeHtml(opening.basmala)}</div>` : ''}
             <div id="quran-verses" class="quran-verses" style="--quran-font-size:${fontSize}px">
-                ${verses.map(verse => verseMarkup(verse, surahId)).join('')}
+                ${verses.map(verse => verseMarkup(verse, surahId, marked)).join('')}
             </div>
             <div class="reader-finish">
                 <button class="btn-primary" onclick="toggleSurahComplete(${surahId})"><i class="fas fa-check-circle"></i> ${isDone ? 'السورة مكتملة — إلغاء العلامة' : 'أتممت قراءة السورة'}</button>
@@ -148,16 +150,16 @@
         });
     }
 
-    function verseMarkup(verse, surahId) {
-        const bookmarks = readJson(KEYS.bookmarks, []);
-        const marked = bookmarks.some(item => item.surah === surahId && item.ayah === verse.verse);
-        return `<article class="ayah ${marked ? 'bookmarked' : ''}" id="ayah-${surahId}-${verse.verse}" onclick="saveReadingPosition(${surahId},${verse.verse})">
+    function verseMarkup(verse, surahId, bookmarks) {
+        const marked = bookmarks.has(`${surahId}:${verse.verse}`);
+        return `<article class="ayah ${marked ? 'bookmarked' : ''}" id="ayah-${surahId}-${verse.verse}" data-surah="${surahId}" data-ayah="${verse.verse}">
             <p>${escapeHtml(splitOpeningBasmala(verse, surahId).text)} <span class="ayah-number">${verse.verse}</span></p>
             <div class="ayah-actions">
-                <button onclick="event.stopPropagation();toggleAyahBookmark(${surahId},${verse.verse})"><i class="${marked ? 'fas' : 'far'} fa-bookmark"></i><span>${marked ? 'محفوظة' : 'حفظ'}</span></button>
-                <button onclick="event.stopPropagation();playQuranAyah(${surahId},${verse.verse})"><i class="fas fa-play"></i><span>استماع</span></button>
-                <button onclick="event.stopPropagation();copyAyah(${surahId},${verse.verse})"><i class="far fa-copy"></i><span>نسخ</span></button>
-                <button onclick="event.stopPropagation();shareAyah(${surahId},${verse.verse})"><i class="fas fa-share-nodes"></i><span>مشاركة</span></button>
+                <button type="button" data-ayah-action="bookmark"><i class="${marked ? 'fas' : 'far'} fa-bookmark"></i><span>${marked ? 'محفوظة' : 'حفظ'}</span></button>
+                <button type="button" data-ayah-action="play"><i class="fas fa-play"></i><span>استماع</span></button>
+                <button type="button" data-ayah-action="copy"><i class="far fa-copy"></i><span>نسخ</span></button>
+                <button type="button" data-ayah-action="share"><i class="fas fa-share-nodes"></i><span>مشاركة</span></button>
+                <button type="button" data-ayah-action="image"><i class="fas fa-image"></i><span>مشاركة صورة</span></button>
             </div>
         </article>`;
     }
@@ -174,8 +176,9 @@
 
     function saveReadingPosition(surah, ayah, silent = true) {
         localStorage.setItem(KEYS.last, JSON.stringify({surah, ayah, updatedAt: Date.now()}));
-        document.querySelectorAll('.ayah.current').forEach(el => el.classList.remove('current'));
-        document.getElementById(`ayah-${surah}-${ayah}`)?.classList.add('current');
+        currentAyahElement?.classList.remove('current');
+        currentAyahElement = document.getElementById(`ayah-${surah}-${ayah}`) || null;
+        currentAyahElement?.classList.add('current');
         if (!silent) notify('تم حفظ موضع القراءة');
     }
 
@@ -231,21 +234,134 @@
         box.innerHTML = results.map(({chapter, verse}) => `<article class="search-result" onclick="openSurah(${chapter.id},${verse.verse})"><strong>سورة ${escapeHtml(chapter.name)} — الآية ${verse.verse}</strong><p>${escapeHtml(verse.text)}</p></article>`).join('') || '<div class="quran-empty">لم يُعثر على نتيجة.</div>';
     }
 
-    function copyAyah(surah, ayah) {
+    async function copyAyah(surah, ayah) {
         const verse = quranData[String(surah)][ayah - 1];
         const text = `${verse.text} ﴿${ayah}﴾\nسورة ${chapters[surah - 1].name}`;
-        navigator.clipboard?.writeText(text).then(() => notify('تم نسخ الآية')).catch(() => fallbackCopy(text));
+        notify('جارٍ نسخ الآية…');
+        try {
+            if (!navigator.clipboard?.writeText) throw new Error('Clipboard API unavailable');
+            await navigator.clipboard.writeText(text);
+        } catch (_) {
+            if (!fallbackCopy(text)) { notify('تعذر النسخ على هذا الجهاز'); return false; }
+        }
+        notify('تم نسخ الآية');
+        return true;
     }
 
     function fallbackCopy(text) {
-        const area = document.createElement('textarea'); area.value = text; document.body.appendChild(area); area.select(); document.execCommand('copy'); area.remove(); notify('تم نسخ الآية');
+        const area = document.createElement('textarea');
+        area.value = text; area.setAttribute('readonly', '');
+        area.style.cssText = 'position:fixed;top:0;left:-9999px;opacity:0';
+        document.body.appendChild(area); area.select();
+        let copied = false;
+        try { copied = document.execCommand('copy'); } catch (_) {}
+        area.remove();
+        return copied;
     }
 
     async function shareAyah(surah, ayah) {
         const verse = quranData[String(surah)][ayah - 1];
         const text = `${verse.text} ﴿${ayah}﴾\nسورة ${chapters[surah - 1].name}`;
-        if (navigator.share) { try { await navigator.share({title: 'آية من القرآن الكريم', text}); } catch (_) {} }
-        else copyAyah(surah, ayah);
+        const share = window.Capacitor?.Plugins?.Share;
+        try {
+            if (window.Capacitor?.isNativePlatform?.() && share?.share) {
+                await share.share({title: 'آية من القرآن الكريم', text, dialogTitle: 'مشاركة الآية'});
+            } else if (navigator.share) {
+                await navigator.share({title: 'آية من القرآن الكريم', text});
+            } else {
+                await copyAyah(surah, ayah);
+            }
+        } catch (error) {
+            if (error?.name !== 'AbortError') notify('تعذرت المشاركة؛ يمكنك نسخ الآية بدلًا من ذلك');
+        }
+    }
+
+    function wrapCanvasText(ctx, text, maxWidth) {
+        const lines = []; let line = '';
+        for (const word of text.split(/\s+/)) {
+            const candidate = line ? `${line} ${word}` : word;
+            if (line && ctx.measureText(candidate).width > maxWidth) { lines.push(line); line = word; }
+            else line = candidate;
+        }
+        if (line) lines.push(line);
+        return lines;
+    }
+
+    async function createAyahImage(surah, ayah) {
+        await document.fonts?.load('700 64px Amiri');
+        const verse = quranData[String(surah)][ayah - 1];
+        const canvas = document.createElement('canvas');
+        canvas.width = 1080; canvas.height = 1350;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) throw new Error('Canvas غير متاح');
+        const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+        gradient.addColorStop(0, '#08251a'); gradient.addColorStop(1, '#14543a');
+        ctx.fillStyle = gradient; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.strokeStyle = 'rgba(225,196,112,.85)'; ctx.lineWidth = 4;
+        ctx.strokeRect(42, 42, canvas.width - 84, canvas.height - 84);
+        ctx.direction = 'rtl'; ctx.textAlign = 'center';
+        ctx.fillStyle = '#e4c878'; ctx.font = '700 48px Tajawal, sans-serif';
+        ctx.fillText(`سورة ${chapters[surah - 1].name}`, canvas.width / 2, 190);
+        let fontSize = 66, lines;
+        const text = `${verse.text} ﴿${ayah}﴾`;
+        do {
+            ctx.font = `${fontSize}px Amiri, serif`;
+            lines = wrapCanvasText(ctx, text, canvas.width - 160);
+            if (lines.length > 10) fontSize -= 4;
+        } while (lines.length > 10 && fontSize > 42);
+        const lineHeight = fontSize * 1.55;
+        const blockHeight = lines.length * lineHeight;
+        let y = Math.max(360, (canvas.height - blockHeight) / 2 + fontSize);
+        ctx.fillStyle = '#fffaf0';
+        lines.forEach(line => { ctx.fillText(line, canvas.width / 2, y); y += lineHeight; });
+        ctx.fillStyle = 'rgba(255,255,255,.8)'; ctx.font = '500 34px Tajawal, sans-serif';
+        ctx.fillText('زاد المسلم', canvas.width / 2, canvas.height - 130);
+        return new Promise((resolve, reject) => canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('تعذر إنشاء الصورة')), 'image/png'));
+    }
+
+    async function shareAyahImage(surah, ayah, button) {
+        if (button?.disabled) return;
+        const original = button?.innerHTML;
+        if (button) { button.disabled = true; button.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>جاري إنشاء الصورة...</span>'; }
+        notify('جاري إنشاء الصورة...');
+        try {
+            await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+            const blob = await createAyahImage(surah, ayah);
+            const name = `zad-ayah-${surah}-${ayah}.png`;
+            if (window.nativeShareBlob && await window.nativeShareBlob(blob, name)) { notify('تم فتح مشاركة الصورة'); return; }
+            const file = new File([blob], name, {type: 'image/png'});
+            if (navigator.canShare?.({files: [file]}) && navigator.share) {
+                await navigator.share({title: 'آية من القرآن الكريم', files: [file]});
+                return;
+            }
+            const url = URL.createObjectURL(blob), link = document.createElement('a');
+            link.href = url; link.download = name; link.click();
+            setTimeout(() => URL.revokeObjectURL(url), 1500);
+            notify('تم إنشاء الصورة وتنزيلها');
+        } catch (error) {
+            if (error?.name !== 'AbortError') notify(`تعذر إنشاء أو مشاركة الصورة: ${error.message}`);
+        } finally {
+            if (button) { button.disabled = false; button.innerHTML = original; }
+        }
+    }
+
+    function handleVerseClick(event) {
+        const button = event.target.closest('[data-ayah-action]');
+        const article = button?.closest('.ayah[data-surah]') || event.target.closest('.ayah[data-surah]');
+        if (!article || !article.closest('#quran-verses')) return;
+        if (button) {
+            event.preventDefault(); event.stopPropagation();
+            const surah = Number(article.dataset.surah), ayah = Number(article.dataset.ayah);
+            switch (button.dataset.ayahAction) {
+                case 'bookmark': toggleAyahBookmark(surah, ayah); break;
+                case 'play': window.playQuranAyah?.(surah, ayah); break;
+                case 'copy': copyAyah(surah, ayah); break;
+                case 'share': shareAyah(surah, ayah); break;
+                case 'image': shareAyahImage(surah, ayah, button); break;
+            }
+            return;
+        }
+        saveReadingPosition(Number(article.dataset.surah), Number(article.dataset.ayah));
     }
 
     function changeQuranFont(delta) {
@@ -282,4 +398,5 @@
     window.shareAyah = shareAyah;
     window.changeQuranFont = changeQuranFont;
     window.toggleReaderSettings = toggleReaderSettings;
+    document.addEventListener('click', handleVerseClick);
 })();
