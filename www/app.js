@@ -648,13 +648,13 @@ function getAllDhikr() {
     return Object.values(AdhkarDB).flat();
 }
 
-let activeDhikrCategory = Storage.load('adhkar_active_category') || 'morning';
+let activeDhikrCategory = Storage.load('adhkar_active_category') || 'azkari_1';
 
 function ensureDailyAdhkarProgress() {
     const today = new Date().toISOString().slice(0, 10);
     if (Storage.load('adhkar_progress_day') === today) return;
     const progress = Storage.load('adhkar_progress') || {};
-    [...(AdhkarDB.morning || []), ...(AdhkarDB.evening || [])].forEach(item => delete progress[item.id]);
+    [...(AdhkarDB.azkari_1 || []), ...(AdhkarDB.azkari_2 || [])].forEach(item => delete progress[item.id]);
     Storage.save('adhkar_progress', progress);
     Storage.save('adhkar_progress_day', today);
 }
@@ -667,166 +667,45 @@ function getDhikrCategoryProgress(category, progress) {
     return { total, current, completed, percentage: total ? Math.round((current / total) * 100) : 0 };
 }
 
-function renderAdhkar(category = 'morning') {
-    window.stopQuranAyahAudio?.();
-    window.stopSurahAudio?.();
-    stopDhikrAudio();
-    if (!AdhkarDB[category]) category = 'morning';
-    ensureDailyAdhkarProgress();
-    activeDhikrCategory = category;
-    Storage.save('adhkar_active_category', category);
-    const content = document.getElementById('page-content');
-    content.className = 'fade-in';
-    
-    const categories = {
-        morning: { name: 'أذكار الصباح', icon: 'fa-sun' },
-        evening: { name: 'أذكار المساء', icon: 'fa-moon' },
-        afterPrayer: { name: 'أذكار بعد الصلاة', icon: 'fa-mosque' },
-        sleeping: { name: 'أذكار النوم', icon: 'fa-bed' },
-        wakingUp: { name: 'أذكار الاستيقاظ', icon: 'fa-alarm-clock' }
-    };
-    (window.ImportedAdhkarCategories || ImportedAdhkarCategories || []).forEach(cat => {
-        categories[cat.key] = { name: cat.name, icon: 'fa-book-open' };
-    });
-
-    const adhkarProgress = Storage.load('adhkar_progress') || {};
-    const categoryProgress = getDhikrCategoryProgress(category, adhkarProgress);
-    
-    let html = `
-        <div class="card">
-            <div class="card-title" style="justify-content: center;">
-                <i class="fas ${categories[category].icon}"></i> ${categories[category].name}
-            </div>
-            
-            <div class="tab-buttons">
-                ${Object.entries(categories).filter(([key]) => ['morning','evening','afterPrayer','sleeping','wakingUp'].includes(key)).map(([key, cat]) => `
-                    <button class="tab-btn ${category === key ? 'active' : ''}" onclick="renderAdhkar('${key}')">
-                        <i class="fas ${cat.icon}"></i> ${cat.name}
-                    </button>
-                `).join('')}
-                <select class="adhkar-category-select" aria-label="كل أقسام الأذكار" onchange="if(this.value) renderAdhkar(this.value)">
-                    <option value="">كل الأقسام (${Object.keys(categories).length})</option>
-                    ${Object.entries(categories).filter(([key]) => !['morning','evening','afterPrayer','sleeping','wakingUp'].includes(key)).map(([key, cat]) => `<option value="${key}" ${category===key?'selected':''}>${cat.name}</option>`).join('')}
-                </select>
-            </div>
-            
-            <div style="text-align: center; margin: 15px 0;">
-                <div style="display: inline-flex; gap: 15px; background: rgba(255,255,255,0.05); 
-                     padding: 10px 20px; border-radius: 20px;">
-                    <div>
-                        <div style="font-size: 1.2rem; color: var(--primary-color);">
-                            ${Object.values(adhkarProgress).filter(v => v && v.completed).length}
-                        </div>
-                        <div style="font-size: 0.7rem;">أذكار مكتملة</div>
-                    </div>
-                    <div style="border-left: 1px solid var(--soft-white); padding-left: 15px;">
-                        <div style="font-size: 1.2rem; color: var(--secondary-color);">
-                            ${Object.values(AdhkarDB).flat().length}
-                        </div>
-                        <div style="font-size: 0.7rem;">مجموع الأذكار</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="adhkar-category-progress">
-                <div><strong>${categoryProgress.completed}</strong> من ${AdhkarDB[category].length} ذكر مكتمل</div>
-                <div><strong>${categoryProgress.current}</strong> من ${categoryProgress.total} تكرار</div>
-            </div>
-            <div class="progress-bar"><div class="progress-fill" style="width:${categoryProgress.percentage}%"></div></div>
-            <div class="adhkar-category-actions">
-                <button class="tab-btn" onclick="completeDhikrCategory('${category}')"><i class="fas fa-check-double"></i> إكمال القسم</button>
-                <button class="tab-btn danger" onclick="resetDhikrCategory('${category}')"><i class="fas fa-rotate-left"></i> تصفير القسم</button>
-            </div>
-        </div>
-    `;
-    
-    AdhkarDB[category].forEach(item => {
-        const progress = adhkarProgress[item.id] || { current: 0, completed: false };
-        const percentage = (progress.current / item.count) * 100;
-        
-        html += `
-            <div class="card dhikr-card" id="adhkar-${item.id}">
-                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
-                    <div class="card-title" style="margin: 0;">
-                        <i class="fas fa-quote-right"></i> ${item.reference}
-                    </div>
-                    <div style="font-size: 0.8rem; color: var(--accent-color); background: rgba(52,152,219,0.1); 
-                         padding: 2px 8px; border-radius: 10px;">
-                        ${item.times}
-                    </div>
-                </div>
-                
-                <div class="dhikr-text">${item.text}</div>
-                
-                <div style="margin: 15px 0;">
-                    <div class="progress-bar">
-                        <div class="progress-fill" style="width: ${percentage}%"></div>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-top: 5px;">
-                        <span>${progress.current} من ${item.count}</span>
-                        <span style="color: var(--primary-color);">${Math.round(percentage)}%</span>
-                    </div>
-                </div>
-                
-                ${item.audio ? `<div class="dhikr-audio-row"><button class="tab-btn dhikr-audio-btn" onclick="toggleDhikrAudio(${item.id}, '${item.audio}')"><i class="fas fa-play" id="dhikr-audio-icon-${item.id}"></i> <span id="dhikr-audio-label-${item.id}">استماع</span></button><small>يتابع الذكر التالي تلقائيًا</small></div>` : ''}
-                <div class="counter-controls">
-                    <button class="counter-btn" onclick="updateDhikrCount(${item.id}, -1)" 
-                            ${progress.completed ? 'disabled style="opacity:0.5"' : ''}>
-                        <i class="fas fa-minus"></i>
-                    </button>
-                    
-                    <div style="display: flex; gap: 10px;">
-                        <button class="complete-btn" onclick="completeDhikrNow(${item.id})" 
-                                ${progress.completed ? 'disabled style="opacity:0.5"' : ''}>
-                            ${progress.completed ? '✓ مكتمل' : 'إكمال الذكر'}
-                        </button>
-                    </div>
-                    
-                    <button class="counter-btn" onclick="updateDhikrCount(${item.id}, 1)" 
-                            ${progress.completed ? 'disabled style="opacity:0.5"' : ''}>
-                        <i class="fas fa-plus"></i>
-                    </button>
-                </div>
-            </div>
-        `;
-    });
-    
-    content.innerHTML = html;
+function renderAdhkar(category = 'azkari_1') {
+    const importedCategories = window.ImportedAdhkarCategories || (typeof ImportedAdhkarCategories !== 'undefined' ? ImportedAdhkarCategories : []);
+    if (!AdhkarDB[category]) category = importedCategories[0]?.key || 'azkari_1';
+    ensureDailyAdhkarProgress(); activeDhikrCategory = category; Storage.save('adhkar_active_category', category);
+    const content=document.getElementById('page-content'); content.className='fade-in adhkar-page';
+    const progress=Storage.load('adhkar_progress')||{}, cp=getDhikrCategoryProgress(category,progress), current=importedCategories.find(c=>c.key===category)||{name:'الأذكار'};
+    const featured=['azkari_1','azkari_2','azkari_4','azkari_5','azkari_6','azkari_11'];
+    const featuredRows=importedCategories.filter(c=>featured.includes(c.key));
+    let html=`<section class="card adhkar-hub"><div class="card-title"><i class="fas fa-book-open"></i> ${current.name}</div>
+      <label class="adhkar-search"><i class="fas fa-search"></i><input type="search" placeholder="ابحث في الأذكار والأقسام" oninput="filterImportedAdhkar(this.value)"></label>
+      <div class="adhkar-featured">${featuredRows.map(c=>`<button class="tab-btn ${category===c.key?'active':''}" onclick="renderAdhkar('${c.key}')">${c.name}</button>`).join('')}</div>
+      <select class="adhkar-category-select" aria-label="كل أقسام الأذكار" onchange="if(this.value) renderAdhkar(this.value)"><option value="">كل الأقسام (${importedCategories.length})</option>${importedCategories.map(c=>`<option value="${c.key}" ${category===c.key?'selected':''}>${c.name}</option>`).join('')}</select>
+      <div id="adhkar-search-results"></div>
+      <div class="adhkar-category-progress"><div><strong>${cp.completed}</strong> من ${AdhkarDB[category]?.length||0} مكتمل</div><div><strong>${cp.current}</strong> من ${cp.total} تكرار</div></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${cp.percentage}%"></div></div>
+      <div class="adhkar-category-actions"><button class="tab-btn" onclick="completeDhikrCategory('${category}')"><i class="fas fa-check-double"></i> إكمال القسم</button><button class="tab-btn danger" onclick="resetDhikrCategory('${category}')"><i class="fas fa-rotate-left"></i> تصفير</button></div></section>`;
+    (AdhkarDB[category]||[]).forEach(item=>{const st=progress[item.id]||{current:0,completed:false},pct=item.count?Math.min(100,st.current/item.count*100):0; html+=`<article class="card dhikr-card" id="adhkar-${item.id}"><div class="dhikr-card-head"><strong>${item.sourceCategory||current.name}</strong><span>${item.times||`${item.count} مرة`}</span></div><div class="dhikr-text">${item.text}</div>${item.reference?`<small class="dhikr-reference">${item.reference}</small>`:''}<div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div><div class="dhikr-audio-row">${item.audio?`<button class="tab-btn dhikr-audio-btn" onclick="toggleDhikrAudio(${item.id}, '${item.audio}')"><i class="fas fa-play" id="dhikr-audio-icon-${item.id}"></i> <span id="dhikr-audio-label-${item.id}">استماع</span></button>`:'<small>لا يوجد تسجيل لهذا الذكر</small>'}<label class="adhkar-autoplay"><input type="checkbox" ${dhikrAutoNext?'checked':''} onchange="setDhikrAutoNext(this.checked)"> متابعة تلقائية</label></div><div class="counter-controls"><button class="counter-btn" onclick="updateDhikrCount(${item.id},-1)" ${st.completed?'disabled':''}><i class="fas fa-minus"></i></button><button class="complete-btn" onclick="completeDhikrNow(${item.id})" ${st.completed?'disabled':''}>${st.completed?'✓ مكتمل':`${st.current} / ${item.count}`}</button><button class="counter-btn" onclick="updateDhikrCount(${item.id},1)" ${st.completed?'disabled':''}><i class="fas fa-plus"></i></button></div></article>`});
+    content.innerHTML=html; syncDhikrAudioUI();
 }
-
-let activeDhikrAudio = null;
-let activeDhikrAudioId = null;
-function stopDhikrAudio(){
-    if(activeDhikrAudio){ activeDhikrAudio.pause(); activeDhikrAudio.currentTime=0; }
-    if(activeDhikrAudioId){
-        const icon=document.getElementById(`dhikr-audio-icon-${activeDhikrAudioId}`); if(icon) icon.className='fas fa-play';
-        const label=document.getElementById(`dhikr-audio-label-${activeDhikrAudioId}`); if(label) label.textContent='استماع';
-    }
-    activeDhikrAudio=null; activeDhikrAudioId=null;
+function filterImportedAdhkar(query){
+    const q=String(query||'').trim(), box=document.getElementById('adhkar-search-results'); if(!box)return; if(!q){box.innerHTML='';return}
+    const cats=window.ImportedAdhkarCategories||[]; const matches=[]; cats.forEach(c=>(AdhkarDB[c.key]||[]).forEach(i=>{if((c.name+' '+i.text+' '+(i.reference||'')).includes(q))matches.push({c,i})}));
+    box.innerHTML=`<div class="adhkar-search-list">${matches.slice(0,20).map(({c,i})=>`<button onclick="renderAdhkar('${c.key}');setTimeout(()=>document.getElementById('adhkar-${i.id}')?.scrollIntoView({behavior:'smooth'}),50)"><strong>${c.name}</strong><small>${i.text.slice(0,90)}${i.text.length>90?'…':''}</small></button>`).join('')||'<p>لا توجد نتائج.</p>'}</div>`;
 }
-function playDhikrAudio(id, src, autoContinue=true){
-    stopDhikrAudio();
-    window.stopQuranAyahAudio?.();
-    window.stopSurahAudio?.();
-    const audio=new Audio(src); activeDhikrAudio=audio; activeDhikrAudioId=id;
-    const icon=document.getElementById(`dhikr-audio-icon-${id}`); if(icon) icon.className='fas fa-pause';
-    const label=document.getElementById(`dhikr-audio-label-${id}`); if(label) label.textContent='إيقاف';
-    audio.addEventListener('ended',()=>{
-        activeDhikrAudio=null; activeDhikrAudioId=null;
-        if(autoContinue){
-            const list=AdhkarDB[activeDhikrCategory]||[]; const idx=list.findIndex(x=>x.id===id);
-            const next=list.slice(idx+1).find(x=>x.audio);
-            if(next) playDhikrAudio(next.id,next.audio,true); else stopDhikrAudio();
-        } else stopDhikrAudio();
-    });
-    audio.addEventListener('error',()=>{ stopDhikrAudio(); window.showToast?.('تعذر تشغيل هذا التسجيل'); });
-    audio.play().catch(()=>{ stopDhikrAudio(); window.showToast?.('تعذر بدء الصوت'); });
+let activeDhikrAudio=null, activeDhikrAudioId=null, activeDhikrAudioCategory=null;
+let dhikrAutoNext=Storage.load('adhkar_audio_autonext')!==false;
+function setDhikrAutoNext(value){dhikrAutoNext=!!value;Storage.save('adhkar_audio_autonext',dhikrAutoNext);document.querySelectorAll('.adhkar-autoplay input').forEach(x=>x.checked=dhikrAutoNext)}
+function dhikrItem(id){for(const [category,items] of Object.entries(AdhkarDB)){const item=items.find(x=>x.id===id);if(item)return{item,category}}return null}
+function emitDhikrState(){if(!activeDhikrAudio||!activeDhikrAudioId)return;const hit=dhikrItem(activeDhikrAudioId);window.dispatchEvent(new CustomEvent('zad:audio-state',{detail:{kind:'dhikr',playing:!activeDhikrAudio.paused,currentTime:activeDhikrAudio.currentTime||0,duration:Number.isFinite(activeDhikrAudio.duration)?activeDhikrAudio.duration:0,title:hit?.item?.sourceCategory||'الأذكار',subtitle:(hit?.item?.text||'ذكر مسموع').slice(0,70)}}))}
+function syncDhikrAudioUI(){document.querySelectorAll('.dhikr-audio-btn').forEach(b=>{const id=Number(b.getAttribute('onclick')?.match(/\((\d+)/)?.[1]);const icon=document.getElementById(`dhikr-audio-icon-${id}`),label=document.getElementById(`dhikr-audio-label-${id}`);if(!icon||!label)return;const active=id===activeDhikrAudioId;icon.className=`fas fa-${active&&!activeDhikrAudio?.paused?'pause':'play'}`;label.textContent=active?(activeDhikrAudio?.paused?'متابعة':'إيقاف'):'استماع'})}
+function stopDhikrAudio(reset=true){if(activeDhikrAudio){activeDhikrAudio.pause();if(reset)activeDhikrAudio.currentTime=0}if(reset){activeDhikrAudio=null;activeDhikrAudioId=null;activeDhikrAudioCategory=null}syncDhikrAudioUI()}
+function playDhikrAudio(id,src){
+    const same=activeDhikrAudioId===id&&activeDhikrAudio; if(!same){stopDhikrAudio();window.stopQuranAyahAudio?.();window.stopSurahAudio?.();activeDhikrAudio=new Audio(src);activeDhikrAudioId=id;activeDhikrAudioCategory=dhikrItem(id)?.category||activeDhikrCategory;activeDhikrAudio.preload='auto';activeDhikrAudio.addEventListener('timeupdate',emitDhikrState);activeDhikrAudio.addEventListener('play',()=>{window.stopQuranAyahAudio?.();window.stopSurahAudio?.();syncDhikrAudioUI();emitDhikrState()});activeDhikrAudio.addEventListener('pause',()=>{syncDhikrAudioUI();emitDhikrState()});activeDhikrAudio.addEventListener('ended',()=>{const cat=activeDhikrAudioCategory,list=AdhkarDB[cat]||[],idx=list.findIndex(x=>x.id===id),next=dhikrAutoNext?list.slice(idx+1).find(x=>x.audio):null;if(next)playDhikrAudio(next.id,next.audio);else stopDhikrAudio()});activeDhikrAudio.addEventListener('error',()=>{stopDhikrAudio();window.showToast?.('تعذر تشغيل هذا التسجيل')})}
+    activeDhikrAudio.play().catch(()=>window.showToast?.('تعذر بدء الصوت')); syncDhikrAudioUI();
 }
-function toggleDhikrAudio(id, src){
-    if(activeDhikrAudioId===id && activeDhikrAudio && !activeDhikrAudio.paused){ activeDhikrAudio.pause(); const i=document.getElementById(`dhikr-audio-icon-${id}`);if(i)i.className='fas fa-play';const l=document.getElementById(`dhikr-audio-label-${id}`);if(l)l.textContent='متابعة'; return; }
-    if(activeDhikrAudioId===id && activeDhikrAudio && activeDhikrAudio.paused){ activeDhikrAudio.play(); const i=document.getElementById(`dhikr-audio-icon-${id}`);if(i)i.className='fas fa-pause';const l=document.getElementById(`dhikr-audio-label-${id}`);if(l)l.textContent='إيقاف'; return; }
-    playDhikrAudio(id,src,true);
-}
+function toggleDhikrAudio(id,src){if(activeDhikrAudioId===id&&activeDhikrAudio){activeDhikrAudio.paused?activeDhikrAudio.play():activeDhikrAudio.pause();return}playDhikrAudio(id,src)}
+function dhikrAudioNext(){if(!activeDhikrAudioId)return;const hit=dhikrItem(activeDhikrAudioId),list=AdhkarDB[hit?.category]||[],idx=list.findIndex(x=>x.id===activeDhikrAudioId),next=list.slice(idx+1).find(x=>x.audio);if(next)playDhikrAudio(next.id,next.audio)}
+function dhikrAudioPrevious(){if(!activeDhikrAudioId)return;const hit=dhikrItem(activeDhikrAudioId),list=AdhkarDB[hit?.category]||[],idx=list.findIndex(x=>x.id===activeDhikrAudioId),prev=list.slice(0,idx).reverse().find(x=>x.audio);if(prev)playDhikrAudio(prev.id,prev.audio)}
+window.stopDhikrAudio=stopDhikrAudio;window.toggleDhikrAudio=toggleDhikrAudio;window.dhikrAudioNext=dhikrAudioNext;window.dhikrAudioPrevious=dhikrAudioPrevious;window.toggleDhikrGlobal=()=>{if(activeDhikrAudio)activeDhikrAudio.paused?activeDhikrAudio.play():activeDhikrAudio.pause()};window.filterImportedAdhkar=filterImportedAdhkar;window.setDhikrAutoNext=setDhikrAutoNext;
 
 function updateDhikrCount(id, change) {
     const dhikr = getAllDhikr().find(d => d.id === id);
@@ -1474,7 +1353,6 @@ window.renderMore = renderMore;
 // ========== الدوال العامة ==========
 
 function loadTab(tabName) {
-    if (tabName !== 'adhkar') stopDhikrAudio();
     AppState.currentTab = tabName;
     
     document.querySelectorAll('.nav-item').forEach(item => {
