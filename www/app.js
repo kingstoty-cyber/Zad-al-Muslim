@@ -718,23 +718,34 @@ let activeDhikrAudio=null, activeDhikrAudioId=null, activeDhikrAudioCategory=nul
 let dhikrAutoNext=Storage.load('adhkar_audio_autonext')!==false;
 function setDhikrAutoNext(value){dhikrAutoNext=!!value;Storage.save('adhkar_audio_autonext',dhikrAutoNext);document.querySelectorAll('.adhkar-autoplay input').forEach(x=>x.checked=dhikrAutoNext)}
 function dhikrItem(id){for(const [category,items] of Object.entries(AdhkarDB)){const item=items.find(x=>x.id===id);if(item)return{item,category}}return null}
-function emitDhikrState(){if(!activeDhikrAudio||!activeDhikrAudioId)return;const hit=dhikrItem(activeDhikrAudioId);window.dispatchEvent(new CustomEvent('zad:audio-state',{detail:{kind:'dhikr',playing:!activeDhikrAudio.paused,currentTime:activeDhikrAudio.currentTime||0,duration:Number.isFinite(activeDhikrAudio.duration)?activeDhikrAudio.duration:0,title:hit?.item?.sourceCategory||'الأذكار',subtitle:(hit?.item?.text||'ذكر مسموع').slice(0,70)}}))}
-function syncDhikrAudioUI(){document.querySelectorAll('.dhikr-audio-btn').forEach(b=>{const id=Number(b.getAttribute('onclick')?.match(/\((\d+)/)?.[1]);const icon=document.getElementById(`dhikr-audio-icon-${id}`),label=document.getElementById(`dhikr-audio-label-${id}`);if(!icon||!label)return;const active=id===activeDhikrAudioId;icon.className=`fas fa-${active&&!activeDhikrAudio?.paused?'pause':'play'}`;label.textContent=active?(activeDhikrAudio?.paused?'متابعة':'إيقاف'):'استماع'})}
+function dhikrAudioProgress(id){const hit=dhikrItem(id),progress=Storage.load('adhkar_progress')||{},st=progress[id]||{current:0,completed:false};return{current:Math.max(0,Math.min(Number(st.current)||0,Number(hit?.item?.count)||1)),count:Number(hit?.item?.count)||1,completed:!!st.completed}}
+function emitDhikrState(){if(!activeDhikrAudio||!activeDhikrAudioId)return;const hit=dhikrItem(activeDhikrAudioId),ap=dhikrAudioProgress(activeDhikrAudioId);window.dispatchEvent(new CustomEvent('zad:audio-state',{detail:{kind:'dhikr',playing:!activeDhikrAudio.paused,currentTime:activeDhikrAudio.currentTime||0,duration:Number.isFinite(activeDhikrAudio.duration)?activeDhikrAudio.duration:0,title:hit?.item?.sourceCategory||'الأذكار',subtitle:`التكرار ${Math.min(ap.current+1,ap.count)} من ${ap.count} • ${(hit?.item?.text||'ذكر مسموع').slice(0,52)}`}}))}
+function syncDhikrAudioUI(){document.querySelectorAll('.dhikr-audio-btn').forEach(b=>{const id=Number(b.getAttribute('onclick')?.match(/\((\d+)/)?.[1]);const icon=document.getElementById(`dhikr-audio-icon-${id}`),label=document.getElementById(`dhikr-audio-label-${id}`);if(!icon||!label)return;const active=id===activeDhikrAudioId,ap=dhikrAudioProgress(id);icon.className=`fas fa-${active&&!activeDhikrAudio?.paused?'pause':'play'}`;label.textContent=active?(activeDhikrAudio?.paused?`متابعة ${ap.current}/${ap.count}`:`التكرار ${Math.min(ap.current+1,ap.count)}/${ap.count}`):'استماع'})}
 function stopDhikrAudio(reset=true){if(activeDhikrAudio){activeDhikrAudio.pause();if(reset)activeDhikrAudio.currentTime=0}if(reset){activeDhikrAudio=null;activeDhikrAudioId=null;activeDhikrAudioCategory=null}syncDhikrAudioUI()}
-function completeDhikrFromAudio(id){
-    const hit=dhikrItem(id); if(!hit)return;
-    const progress=Storage.load('adhkar_progress')||{};
-    progress[id]={current:hit.item.count,completed:true,lastCompleted:new Date().toISOString(),completedBy:'audio'};
-    Storage.save('adhkar_progress',progress);
-    const card=document.getElementById(`adhkar-${id}`); if(card){
-        card.classList.add('dhikr-audio-completed');
-        const fill=card.querySelector('.progress-fill'); if(fill)fill.style.width='100%';
-        const done=card.querySelector('.complete-btn'); if(done){done.textContent='✓ مكتمل بالسماع';done.disabled=true}
+function renderDhikrAudioProgress(id,current,count,completed=false){const card=document.getElementById(`adhkar-${id}`);if(!card)return;const fill=card.querySelector('.progress-fill');if(fill)fill.style.width=`${Math.min(100,current/count*100)}%`;const done=card.querySelector('.complete-btn');if(done){done.textContent=completed?'✓ مكتمل بالسماع':`${current} / ${count}`;done.disabled=completed}if(completed)card.classList.add('dhikr-audio-completed')}
+function recordDhikrAudioRepetition(id){
+    const hit=dhikrItem(id);if(!hit)return{completed:false,current:0,count:1};
+    const count=Math.max(1,Number(hit.item.count)||1),progress=Storage.load('adhkar_progress')||{},old=progress[id]||{current:0,completed:false};
+    if(old.completed)return{completed:true,current:count,count};
+    const current=Math.min(count,(Number(old.current)||0)+1),completed=current>=count;
+    progress[id]={...old,current,completed,lastAudioRepeat:new Date().toISOString(),...(completed?{lastCompleted:new Date().toISOString(),completedBy:'audio'}:{})};
+    Storage.save('adhkar_progress',progress);renderDhikrAudioProgress(id,current,count,completed);return{completed,current,count};
+}
+function completeDhikrFromAudio(id){const hit=dhikrItem(id);if(!hit)return;const progress=Storage.load('adhkar_progress')||{};progress[id]={...(progress[id]||{}),current:hit.item.count,completed:true,lastCompleted:new Date().toISOString(),completedBy:'audio'};Storage.save('adhkar_progress',progress);renderDhikrAudioProgress(id,hit.item.count,hit.item.count,true)}
+function handleDhikrAudioEnded(id){
+    const result=recordDhikrAudioRepetition(id);emitDhikrState();
+    if(!result.completed){
+        // العدد المكتوب جزء من الذكر نفسه: نكرر التسجيل حتى يكتمل العدد، حتى لو كانت المتابعة التلقائية متوقفة.
+        if(activeDhikrAudio&&activeDhikrAudioId===id){activeDhikrAudio.currentTime=0;activeDhikrAudio.play().catch(()=>window.showToast?.('تعذر متابعة تكرار الذكر'));syncDhikrAudioUI()}
+        return;
     }
+    const cat=activeDhikrAudioCategory,list=AdhkarDB[cat]||[],idx=list.findIndex(x=>x.id===id),next=dhikrAutoNext?list.slice(idx+1).find(x=>x.audio):null;
+    if(next)playDhikrAudio(next.id,next.audio);else stopDhikrAudio();
 }
 function playDhikrAudio(id,src){
-    const same=activeDhikrAudioId===id&&activeDhikrAudio; if(!same){stopDhikrAudio();window.stopQuranAyahAudio?.();window.stopSurahAudio?.();activeDhikrAudio=new Audio(src);activeDhikrAudioId=id;activeDhikrAudioCategory=dhikrItem(id)?.category||activeDhikrCategory;activeDhikrAudio.preload='auto';activeDhikrAudio.addEventListener('timeupdate',emitDhikrState);activeDhikrAudio.addEventListener('play',()=>{window.stopQuranAyahAudio?.();window.stopSurahAudio?.();syncDhikrAudioUI();emitDhikrState()});activeDhikrAudio.addEventListener('pause',()=>{syncDhikrAudioUI();emitDhikrState()});activeDhikrAudio.addEventListener('ended',()=>{completeDhikrFromAudio(id);const cat=activeDhikrAudioCategory,list=AdhkarDB[cat]||[],idx=list.findIndex(x=>x.id===id),next=dhikrAutoNext?list.slice(idx+1).find(x=>x.audio):null;if(next)playDhikrAudio(next.id,next.audio);else stopDhikrAudio()});activeDhikrAudio.addEventListener('error',()=>{stopDhikrAudio();window.showToast?.('تعذر تشغيل هذا التسجيل')})}
-    activeDhikrAudio.play().catch(()=>window.showToast?.('تعذر بدء الصوت')); syncDhikrAudioUI();
+    const same=activeDhikrAudioId===id&&activeDhikrAudio;
+    if(!same){stopDhikrAudio();window.stopQuranAyahAudio?.();window.stopSurahAudio?.();activeDhikrAudio=new Audio(src);activeDhikrAudioId=id;activeDhikrAudioCategory=dhikrItem(id)?.category||activeDhikrCategory;activeDhikrAudio.preload='auto';activeDhikrAudio.addEventListener('timeupdate',emitDhikrState);activeDhikrAudio.addEventListener('play',()=>{window.stopQuranAyahAudio?.();window.stopSurahAudio?.();syncDhikrAudioUI();emitDhikrState()});activeDhikrAudio.addEventListener('pause',()=>{syncDhikrAudioUI();emitDhikrState()});activeDhikrAudio.addEventListener('ended',()=>handleDhikrAudioEnded(id));activeDhikrAudio.addEventListener('error',()=>{stopDhikrAudio();window.showToast?.('تعذر تشغيل هذا التسجيل')})}
+    activeDhikrAudio.play().catch(()=>window.showToast?.('تعذر بدء الصوت'));syncDhikrAudioUI();emitDhikrState();
 }
 function toggleDhikrAudio(id,src){if(activeDhikrAudioId===id&&activeDhikrAudio){activeDhikrAudio.paused?activeDhikrAudio.play():activeDhikrAudio.pause();return}playDhikrAudio(id,src)}
 function dhikrAudioNext(){if(!activeDhikrAudioId)return;const hit=dhikrItem(activeDhikrAudioId),list=AdhkarDB[hit?.category]||[],idx=list.findIndex(x=>x.id===activeDhikrAudioId),next=list.slice(idx+1).find(x=>x.audio);if(next)playDhikrAudio(next.id,next.audio)}
@@ -1290,7 +1301,7 @@ function renderSettings() {
 
         <div class="card">
             <div class="card-title"><i class="fas fa-circle-info"></i> حول التطبيق</div>
-            <p>تطبيق <span style="color: var(--primary-color)">زاد المسلم</span> - الإصدار ${window.ZAD_APP?.version || '4.9.3-beta.5.3'}</p>
+            <p>تطبيق <span style="color: var(--primary-color)">زاد المسلم</span> - الإصدار ${window.ZAD_APP?.version || '4.9.3-beta.5.2'}</p>
             <p style="font-size: 0.9rem; line-height: 1.6;">
                 تطبيق متكامل لمتابعة العبادات اليومية، الأذكار، وقراءة القرآن الكريم.<br>
                 يعمل دون اتصال في القرآن والأذكار بعد التحميل الأول ويحفظ تقدمك محلياً.<br>
@@ -1366,7 +1377,7 @@ function renderMore() {
         ['fa-palette', 'المظهر', 'اختيار الألوان ووضع القراءة', "loadTab('themes')"],
         ['fa-user-gear', 'الإعدادات', 'التنبيهات والبيانات والخصوصية', "loadTab('settings')"],
         ['fa-download', 'التنزيلات', 'إدارة التلاوات المحفوظة', 'renderAudioDownloads()'],
-        ['fa-mobile-screen-button', 'تطبيق Android', '4.9.3-beta.5.3 — إصلاحات الاستقرار والتحديث', "window.open('https://github.com/kingstoty-cyber/Zad-al-Muslim/actions/workflows/android-apk.yml','_blank','noopener')"]
+        ['fa-mobile-screen-button', 'تطبيق Android', '4.9.3-beta.5.2 — إصلاحات الاستقرار والتحديث', "window.open('https://github.com/kingstoty-cyber/Zad-al-Muslim/actions/workflows/android-apk.yml','_blank','noopener')"]
     ];
     content.innerHTML = `
         <div class="simple-page-heading">

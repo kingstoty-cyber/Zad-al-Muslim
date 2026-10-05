@@ -1,4 +1,4 @@
-/* Zad Al-Muslim v4.9.3-beta.5.3 — إنشاء فيديو قرآن وحفظه ومشاركته أصليًا على Android. */
+/* Zad Al-Muslim v4.9.3-beta.5.2 — إنشاء فيديو قرآن وحفظه ومشاركته أصليًا على Android. */
 (function () {
   'use strict';
 
